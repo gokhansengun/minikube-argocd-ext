@@ -1,0 +1,83 @@
+---
+# Source: apm-server/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apm-server-apm-server
+  labels:
+    app: apm-server
+    release: "apm-server"
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: apm-server
+      release: "apm-server"
+  template:
+    metadata:
+      labels:
+        app: apm-server
+        release: "apm-server"
+      annotations:
+        pia-team.com/app: "apm-server"
+        pia-team.com/app-logo: "apm-server"
+        pia-team.com/app-title: "APM Server"
+        configChecksum: 988cb91974470972414a561a06198ddb5248c94741007255d3f51e67a1f3ee9
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 0
+        runAsUser: 1000
+      serviceAccountName: default
+      volumes:
+      - name: apm-server-config
+        configMap:
+          name: apm-server-apm-server-config
+          defaultMode: 0600
+      imagePullSecrets:
+      - name: reg-creds
+      containers:
+      - name: apm-server
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/apm/apm-server:7.17.3"
+        imagePullPolicy: "IfNotPresent"
+        securityContext:
+          privileged: false
+          runAsGroup: 0
+          runAsNonRoot: true
+          runAsUser: 1000
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        ports:
+        - containerPort: 8200
+          name: http
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 1000Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: apm-server-config
+          mountPath: /usr/share/apm-server/apm-server.yml
+          subPath: apm-server.yml
+          readOnly: true
+  progressDeadlineSeconds: 3600

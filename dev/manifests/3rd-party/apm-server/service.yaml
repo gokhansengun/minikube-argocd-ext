@@ -1,0 +1,25 @@
+---
+# Source: apm-server/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: apm-server-apm-server
+  labels:
+    app: apm-server
+    release: "apm-server"
+    heritage: Helm
+  annotations:
+    pia-team.com/app: apm-server
+    pia-team.com/app-logo: apm-server
+    pia-team.com/app-title: APM Server
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8200
+    protocol: TCP
+    name: http
+    targetPort: 8200
+  selector:
+    app: apm-server
+    release: "apm-server"

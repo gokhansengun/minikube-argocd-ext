@@ -1,0 +1,32 @@
+---
+# Source: apm-server/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apm-server-apm-server-config
+  labels:
+    app: "apm-server-apm-server"
+    chart: "apm-server-7.17.3"
+    heritage: "Helm"
+    release: "apm-server"
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+data:
+  apm-server.yml: |
+    apm-server:
+      host: "0.0.0.0:8200"
+      ilm:
+        enabled: false
+      rum:
+        enabled: true
+
+    setup.template.name: 'apm'
+    setup.template.pattern: 'apm-*'
+    setup.template.enabled: true
+
+    queue: {}
+
+    output.elasticsearch:
+      ilm.enabled: false
+      protocol: http
+      hosts: ["elasticsearch-master:9200"]

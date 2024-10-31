@@ -1,0 +1,44 @@
+---
+# Source: xxxxx/templates/apm-server/apm-server-network-policy.yml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: apm-server-ingress
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+spec:
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 10.244.0.0/16
+    ports:
+    - port: 8200
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app: apm-server
+  policyTypes:
+  - Ingress
+---
+# Source: xxxxx/templates/apm-server/apm-server-network-policy.yml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: apm-server-egress
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+spec:
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 10.244.0.0/16
+    ports:
+    - port: 53
+      protocol: UDP
+    - port: 9200
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app: apm-server
+  policyTypes:
+  - Egress
