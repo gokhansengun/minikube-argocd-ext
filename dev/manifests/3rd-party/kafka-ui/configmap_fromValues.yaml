@@ -1,0 +1,43 @@
+---
+# Source: kafka-ui/templates/configmap_fromValues.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-ui-fromvalues
+  labels:
+    helm.sh/chart: kafka-ui-0.7.1-1
+    app.kubernetes.io/name: kafka-ui
+    app.kubernetes.io/instance: kafka-ui
+    app.kubernetes.io/version: "v0.7.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/role: pia.k8s.kafka-ui/0.9.0
+data:
+  config.yml: |-
+    auth:
+      oauth2:
+        client:
+          keycloak:
+            client-name: keycloak
+            clientId: orbitant-backend-client
+            clientSecret: B50OGH8AlorlaZJrmlsc2EjUWMkiTwBX
+            custom-params:
+              type: keycloak
+            issuer-uri: https://diam.orbitant.192.168.21.10.nip.io/realms/orbitant-realm
+            provider: keycloak
+            scope: openid
+            user-name-attribute: preferred_username
+      type: OAUTH2
+    kafka:
+      clusters:
+      - bootstrapServers: kafka:9092
+        name: app-set-cls
+      - bootstrapServers: jaeger-kafka-controller-0.jaeger-kafka-controller-headless.hornet.svc.cluster.local:9092,jaeger-kafka-controller-1.jaeger-kafka-controller-headless.hornet.svc.cluster.local:9092,jaeger-kafka-controller-2.jaeger-kafka-controller-headless.hornet.svc.cluster.local:9092
+        name: jaeger-kafka
+    management:
+      health:
+        ldap:
+          enabled: false
+    spring:
+      security:
+        oauth2: null

@@ -1,0 +1,98 @@
+---
+# Source: kafka-ui/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-ui
+  labels:
+    helm.sh/chart: kafka-ui-0.7.1-1
+    app.kubernetes.io/name: kafka-ui
+    app.kubernetes.io/instance: kafka-ui
+    app.kubernetes.io/version: "v0.7.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/app: kafka-ui
+    pia-team.com/app-logo: kafka
+    pia-team.com/app-title: Kafka UI
+    pia-team.com/role: pia.k8s.kafka-ui/0.9.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kafka-ui
+      app.kubernetes.io/instance: kafka-ui
+  template:
+    metadata:
+      annotations:
+        pia-team.com/app: kafka-ui
+        pia-team.com/app-logo: kafka
+        pia-team.com/app-title: Kafka UI
+        checksum/config: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        checksum/configFromValues: c4205168c8b610c6a7a9604dc96b7af7620d7c244a947e82aaaa28542f5d17b0
+        checksum/secret: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+      labels:
+        app.kubernetes.io/name: kafka-ui
+        app.kubernetes.io/instance: kafka-ui
+    spec:
+      imagePullSecrets:
+      - name: reg-creds
+      serviceAccountName: kafka-ui
+      securityContext: {}
+      containers:
+      - name: kafka-ui
+        securityContext: {}
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/provectuslabs/kafka-ui:v0.7.0
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SERVER_FORWARDHEADERSSTRATEGY
+          value: FRAMEWORK
+        - name: SPRING_CONFIG_ADDITIONAL-LOCATION
+          value: /kafka-ui/config.yml
+        envFrom:
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/ssl/certs
+          name: custom-ca-certs
+        - mountPath: /app/jks
+          name: jks-volume
+        - mountPath: /usr/lib/jvm/zulu17-ca/lib/security/cacerts
+          name: jks-volume
+          subPath: cacerts
+        - name: kafka-ui-yaml-conf
+          mountPath: /kafka-ui/
+      volumes:
+      - configMap:
+          name: custom-ca-certs
+        name: custom-ca-certs
+      - name: jks-volume
+        secret:
+          secretName: jks-store
+      - name: kafka-ui-yaml-conf
+        configMap:
+          name: kafka-ui-fromvalues
+      # NOTE: gseng - we added below block
+      hostAliases:
+      - hostnames:
+        - diam.orbitant.192.168.21.10.nip.io
+        ip: 10.111.174.148
+      # NOTE: gseng - we added above block
+  progressDeadlineSeconds: 3600

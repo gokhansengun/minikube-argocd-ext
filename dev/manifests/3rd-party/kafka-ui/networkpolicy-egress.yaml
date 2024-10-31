@@ -1,0 +1,32 @@
+---
+# Source: kafka-ui/templates/networkpolicy-egress.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kafka-ui-egress
+  labels:
+    helm.sh/chart: kafka-ui-0.7.1-1
+    app.kubernetes.io/name: kafka-ui
+    app.kubernetes.io/instance: kafka-ui
+    app.kubernetes.io/version: "v0.7.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/role: pia.k8s.kafka-ui/0.9.0
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: kafka-ui
+      app.kubernetes.io/instance: kafka-ui
+  policyTypes:
+  - Egress
+  egress:
+  - ports:
+    - port: 53
+      protocol: UDP
+    - port: 9092
+      protocol: TCP
+    - port: 8443
+      protocol: TCP
+    to:
+    - ipBlock:
+        cidr: 10.244.0.0/16

@@ -1,0 +1,28 @@
+---
+# Source: kafka-ui/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-ui
+  labels:
+    helm.sh/chart: kafka-ui-0.7.1-1
+    app.kubernetes.io/name: kafka-ui
+    app.kubernetes.io/instance: kafka-ui
+    app.kubernetes.io/version: "v0.7.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+
+    pia-team.com/app: kafka-ui
+    pia-team.com/app-logo: kafka
+    pia-team.com/app-title: Kafka UI
+    pia-team.com/role: pia.k8s.kafka-ui/0.9.0
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app.kubernetes.io/name: kafka-ui
+    app.kubernetes.io/instance: kafka-ui
