@@ -1,0 +1,67 @@
+---
+# Source: kafka/charts/zookeeper/templates/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-zookeeper-headless
+  namespace: hornet
+  labels:
+    app.kubernetes.io/name: zookeeper
+    helm.sh/chart: zookeeper-10.2.0
+    app.kubernetes.io/instance: kafka
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: zookeeper
+  annotations:
+    pia-team.com/role: pia.k8s.kafka/0.4.1
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - name: tcp-client
+    port: 2181
+    targetPort: client
+  - name: tcp-follower
+    port: 2888
+    targetPort: follower
+  - name: tcp-election
+    port: 3888
+    targetPort: election
+  selector:
+    app.kubernetes.io/name: zookeeper
+    app.kubernetes.io/instance: kafka
+    app.kubernetes.io/component: zookeeper
+---
+# Source: kafka/templates/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-headless
+  namespace: "hornet"
+  labels:
+    app.kubernetes.io/name: kafka
+    helm.sh/chart: kafka-18.4.2
+    app.kubernetes.io/instance: kafka
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: kafka
+  annotations:
+    pia-team.com/app: kafka
+    pia-team.com/app-logo: kafka
+    pia-team.com/app-title: Kafka
+    pia-team.com/role: pia.k8s.kafka/0.4.1
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: tcp-client
+    port: 9092
+    protocol: TCP
+    targetPort: kafka-client
+  - name: tcp-internal
+    port: 9093
+    protocol: TCP
+    targetPort: kafka-internal
+  selector:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/instance: kafka
+    app.kubernetes.io/component: kafka

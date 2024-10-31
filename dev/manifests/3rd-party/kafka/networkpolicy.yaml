@@ -1,0 +1,34 @@
+---
+# Source: kafka/charts/zookeeper/templates/networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: kafka-zookeeper
+  namespace: hornet
+  labels:
+    app.kubernetes.io/name: zookeeper
+    helm.sh/chart: zookeeper-10.2.0
+    app.kubernetes.io/instance: kafka
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/role: pia.k8s.kafka/0.4.1
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: zookeeper
+      app.kubernetes.io/instance: kafka
+  policyTypes:
+  - Ingress
+  ingress:
+    # Allow inbound connections to ZooKeeper
+  - ports:
+    - port: 2181
+    # Allow internal communications between nodes
+  - ports:
+    - port: 2888
+    - port: 3888
+    from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: zookeeper
+          app.kubernetes.io/instance: kafka

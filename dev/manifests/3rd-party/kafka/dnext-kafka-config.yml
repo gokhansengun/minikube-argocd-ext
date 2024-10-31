@@ -1,0 +1,10 @@
+---
+# Source: kafka/templates/dnext-kafka-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.kafka/0.4.1
+kind: ConfigMap
+metadata:
+  name: dnext-kafka-config
+  annotations:
+    pia-team.com/role: pia.k8s.kafka/0.4.1
