@@ -1,0 +1,87 @@
+---
+# Source: camunda-bpm-platform/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: camunda-camunda-bpm-platform
+  labels:
+    helm.sh/chart: camunda-bpm-platform-7.6.4
+    app.kubernetes.io/name: camunda-bpm-platform
+    app.kubernetes.io/instance: camunda
+    app.kubernetes.io/version: "7.x.x"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/app: camunda
+    pia-team.com/app-logo: camunda
+    pia-team.com/app-title: Camunda
+    pia-team.com/role: pia.k8s.camunda/0.7.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: camunda-bpm-platform
+      app.kubernetes.io/instance: camunda
+  template:
+    metadata:
+      annotations:
+        pia-team.com/app: camunda
+        pia-team.com/app-logo: camunda
+        pia-team.com/app-title: Camunda
+      labels:
+        app.kubernetes.io/name: camunda-bpm-platform
+        app.kubernetes.io/instance: camunda
+    spec:
+      imagePullSecrets:
+      - name: reg-creds
+      serviceAccountName: camunda-camunda-bpm-platform
+      securityContext:
+        fsGroup: 1000
+      containers:
+      - name: camunda-bpm-platform
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/camunda:v0.2.0"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DEBUG
+          value: "false"
+        - name: JMX_PROMETHEUS
+          value: "false"
+        - name: DB_DRIVER
+          value: "org.postgresql.Driver"
+        - name: DB_URL
+          value: "jdbc:postgresql://postgres:5432/camunda"
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: camunda-bpm-platform-postgresql-credentials
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: camunda-bpm-platform-postgresql-credentials
+              key: DB_PASSWORD
+
+        - name: DB_VALIDATE_ON_BORROW
+          value: "true"
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        startupProbe:
+          httpGet:
+            path: /camunda/
+            port: http
+          initialDelaySeconds: 45
+          periodSeconds: 30
+
+
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1500Mi
+          requests:
+            cpu: 50m
+            memory: 500Mi
+  progressDeadlineSeconds: 3600

@@ -1,0 +1,19 @@
+---
+# Source: xxxxx/templates/camunda-context-xml-cm.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: camunda-context-xml
+  namespace: hornet
+  annotations:
+    pia-team.com/role: pia.k8s.camunda/0.7.0
+data:
+  context.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+
+    <Context>
+        <WatchedResource>WEB-INF/web.xml</WatchedResource>
+        <WatchedResource>WEB-INF/tomcat-web.xml</WatchedResource>
+        <WatchedResource>${catalina.base}/conf/web.xml</WatchedResource>
+        <Manager className="de.javakaffee.web.msm.MemcachedBackupSessionManager" memcachedNodes="redis://redis-ha-haproxy:6379" sticky="false" sessionBackupAsync="false" storageKeyPrefix="context" lockingMode="auto" />
+    </Context>

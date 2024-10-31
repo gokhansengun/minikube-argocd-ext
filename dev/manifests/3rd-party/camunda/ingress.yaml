@@ -1,0 +1,32 @@
+---
+# Source: camunda-bpm-platform/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: camunda-camunda-bpm-platform
+  labels:
+    helm.sh/chart: camunda-bpm-platform-7.6.4
+    app.kubernetes.io/name: camunda-bpm-platform
+    app.kubernetes.io/instance: camunda
+    app.kubernetes.io/version: "7.x.x"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/family: orbitant
+    pia-team.com/role: pia.k8s.camunda/0.7.0
+spec:
+  tls:
+  - hosts:
+    - "camunda.orbitant.192.168.21.10.nip.io"
+    secretName: camunda-bpm-platform-tls
+  rules:
+  - host: "camunda.orbitant.192.168.21.10.nip.io"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: camunda-camunda-bpm-platform
+            port:
+              number: 80
+  ingressClassName: nginx

@@ -1,0 +1,10 @@
+---
+# Source: camunda-bpm-platform/templates/dnext-camunda-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.camunda/0.7.0
+kind: ConfigMap
+metadata:
+  name: dnext-camunda-config
+  annotations:
+    pia-team.com/role: pia.k8s.camunda/0.7.0
