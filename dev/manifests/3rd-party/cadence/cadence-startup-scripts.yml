@@ -1,0 +1,26 @@
+---
+# Source: xxxxx/templates/cadence-startup-scripts.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cadence-startup-scripts
+  annotations:
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+data:
+  start-cadence.sh: |-
+    #!/bin/bash
+
+    set -ex
+
+    CONFIG_TEMPLATE_PATH="${CONFIG_TEMPLATE_PATH:-/etc/cadence/config/config_template.yaml}"
+
+    # NOTE: gseng - below is a customization for OpenShift compatibility  
+    # copy the cadence config to volume
+    # CADENCE_HOME was /etc/cadence
+    # /cadence-home is an emptyDir volume mounted at there
+    # CADENCE_HOME is also set to /cadence-home in the modifications
+    cp -R /etc/cadence/* /cadence-home/
+
+    dockerize -template $CONFIG_TEMPLATE_PATH:/cadence-home/config/docker.yaml
+
+    exec cadence-server --root $CADENCE_HOME --env docker start --services=$SERVICES

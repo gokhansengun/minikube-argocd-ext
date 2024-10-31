@@ -1,0 +1,72 @@
+---
+# Source: xxxxx/templates/cadence-schema-update.yml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cadence-schema-update
+  annotations:
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  backoffLimit: 100
+  completionMode: NonIndexed
+  completions: 1
+  parallelism: 1
+  suspend: false
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: cadence
+        job-name: cadence-schema-update
+      name: cadence-schema-update
+    spec:
+      imagePullSecrets:
+      - name: reg-creds
+      containers:
+      - args:
+        - cadence-sql-tool
+        - update-schema
+        - -d
+        - /etc/cadence/schema/postgres/cadence/versioned
+        env:
+        - name: SQL_PLUGIN
+          value: postgres
+        - name: SQL_HOST
+          value: postgres
+        - name: SQL_PORT
+          value: "5432"
+        - name: SQL_DATABASE
+          value: cadence
+        - name: SQL_USER
+          value: "cadence"
+        - name: SQL_PASSWORD
+          value: "epqdJlI9rS5s2AfBz6HU"
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/ubercadence/server:0.24.0
+        imagePullPolicy: IfNotPresent
+        name: default-schema
+        resources: {}
+      - args:
+        - cadence-sql-tool
+        - update-schema
+        - -d
+        - /etc/cadence/schema/postgres/visibility/versioned
+        env:
+        - name: SQL_PLUGIN
+          value: postgres
+        - name: SQL_HOST
+          value: postgres
+        - name: SQL_PORT
+          value: "5432"
+        - name: SQL_DATABASE
+          value: cadence_visibility
+        - name: SQL_USER
+          value: "cadence_visibility"
+        - name: SQL_PASSWORD
+          value: "BoUhSCtaOnWXGnHfWJKz"
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/ubercadence/server:0.24.0
+        imagePullPolicy: IfNotPresent
+        name: visibility-schema
+        resources: {}
+      restartPolicy: OnFailure
+      terminationGracePeriodSeconds: 30

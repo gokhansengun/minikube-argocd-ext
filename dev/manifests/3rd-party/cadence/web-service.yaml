@@ -1,0 +1,30 @@
+---
+# Source: cadence/templates/web-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cadence-web
+  labels:
+    app.kubernetes.io/name: cadence
+    helm.sh/chart: cadence-0.24.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/version: 0.24.0
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: cadence
+  annotations:
+    pia-team.com/app: cadence-web
+    pia-team.com/app-logo: cadence-web
+    pia-team.com/app-title: Cadence Web
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app.kubernetes.io/name: cadence
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/component: web

@@ -1,0 +1,114 @@
+---
+# Source: xxxxx/templates/cadence-schema-setup.yml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cadence-schema-setup
+  annotations:
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  backoffLimit: 100
+  completionMode: NonIndexed
+  completions: 1
+  parallelism: 1
+  suspend: false
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: cadence
+        job-name: cadence-schema-setup
+      name: cadence-schema-setup
+    spec:
+      imagePullSecrets:
+      - name: reg-creds
+      containers:
+      - command:
+        - bash
+        - -c
+        - |
+          set -e
+
+          set +e
+          result=$(/docker-entrypoint.sh cadence-sql-tool setup-schema -v "0.0" 2>&1)
+          exit_code=$?
+
+          set -e
+
+          if [[ "$result" == *"already exists"* ]]
+          then
+            echo "Schema already exists"
+            exit 0
+          fi
+
+          if [ $exit_code -eq 0 ]
+          then
+            echo "Schema setup is a success: $result"
+          else
+            echo "Failed to setup schema: $result"
+            exit 1
+          fi
+
+        env:
+        - name: SQL_PLUGIN
+          value: postgres
+        - name: SQL_HOST
+          value: postgres
+        - name: SQL_PORT
+          value: "5432"
+        - name: SQL_DATABASE
+          value: cadence
+        - name: SQL_USER
+          value: "cadence"
+        - name: SQL_PASSWORD
+          value: "epqdJlI9rS5s2AfBz6HU"
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/ubercadence/server:0.24.0
+        imagePullPolicy: IfNotPresent
+        name: default-schema
+        resources: {}
+      - command:
+        - bash
+        - -c
+        - |
+          set -e
+
+          set +e
+          result=$(/docker-entrypoint.sh cadence-sql-tool setup-schema -v "0.0" 2>&1)
+          exit_code=$?
+
+          set -e
+
+          if [[ "$result" == *"already exists"* ]]
+          then
+            echo "Schema already exists"
+            exit 0
+          fi
+
+          if [ $exit_code -eq 0 ]
+          then
+            echo "Schema setup is a success: $result"
+          else
+            echo "Failed to setup schema: $result"
+            exit 1
+          fi
+
+        env:
+        - name: SQL_PLUGIN
+          value: postgres
+        - name: SQL_HOST
+          value: postgres
+        - name: SQL_PORT
+          value: "5432"
+        - name: SQL_DATABASE
+          value: cadence_visibility
+        - name: SQL_USER
+          value: "cadence_visibility"
+        - name: SQL_PASSWORD
+          value: "BoUhSCtaOnWXGnHfWJKz"
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/ubercadence/server:0.24.0
+        imagePullPolicy: IfNotPresent
+        name: visibility-schema
+        resources: {}
+      restartPolicy: OnFailure
+      terminationGracePeriodSeconds: 30

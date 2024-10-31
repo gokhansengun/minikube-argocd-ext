@@ -1,0 +1,136 @@
+---
+# Source: cadence/templates/server-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cadence
+  labels:
+    app.kubernetes.io/name: cadence
+    helm.sh/chart: cadence-0.24.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/version: 0.24.0
+    app.kubernetes.io/part-of: cadence
+  annotations:
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+data:
+  config_template.yaml: |-
+    log:
+      stdout: true
+      level: "debug,info"
+      levelKey: "level"
+
+    persistence:
+      defaultStore: default
+      visibilityStore: visibility
+      numHistoryShards: 512
+      datastores:
+        default:
+          sql:
+            pluginName: postgres
+            databaseName: cadence
+            connectAddr: "postgres:5432"
+            connectProtocol: "tcp"
+            user: cadence
+            password: {{ .Env.CADENCE_STORE_PASSWORD }}
+        visibility:
+          sql:
+            pluginName: postgres
+            databaseName: cadence_visibility
+            connectAddr: "postgres:5432"
+            connectProtocol: "tcp"
+            user: cadence_visibility
+            password: {{ .Env.CADENCE_VISIBILITY_STORE_PASSWORD }}
+
+    ringpop:
+      name: cadence
+      bootstrapMode: dns
+      bootstrapHosts:
+        - cadence-frontend-headless:7833
+        - cadence-frontend-headless:7933
+        - cadence-history-headless:7834
+        - cadence-history-headless:7934
+        - cadence-matching-headless:7835
+        - cadence-matching-headless:7935
+        - cadence-worker-headless:7939
+      maxJoinDuration: 30s
+
+    services:
+      frontend:
+        rpc:
+          grpcPort: 7833
+          port: 7933
+          bindOnIP: {{ default .Env.POD_IP "0.0.0.0" }}
+        metrics:
+          tags:
+            type: frontend
+          prometheus:
+            timerType: histogram
+            listenAddress: "0.0.0.0:9090"
+
+      history:
+        rpc:
+          grpcPort: 7834
+          port: 7934
+          bindOnIP: {{ default .Env.POD_IP "0.0.0.0" }}
+        metrics:
+          tags:
+            type: history
+          prometheus:
+            timerType: histogram
+            listenAddress: "0.0.0.0:9090"
+
+      matching:
+        rpc:
+          grpcPort: 7835
+          port: 7935
+          bindOnIP: {{ default .Env.POD_IP "0.0.0.0" }}
+        metrics:
+          tags:
+            type: matching
+          prometheus:
+            timerType: histogram
+            listenAddress: "0.0.0.0:9090"
+
+      worker:
+        rpc:
+          port: 7939
+          bindOnIP: {{ default .Env.POD_IP "0.0.0.0" }}
+        metrics:
+          tags:
+            type: worker
+          prometheus:
+            timerType: histogram
+            listenAddress: "0.0.0.0:9090"
+
+    clusterGroupMetadata:
+      enableGlobalDomain: true
+      failoverVersionIncrement: 100
+      primaryClusterName: cluster-0
+      currentClusterName: cluster-0
+      clusterGroup:
+        cluster-0:
+          enabled: true
+          initialFailoverVersion: 0
+          rpcName: "cadence-frontend"
+          rpcAddress: "cadence-frontend:7833"
+          rpcTransport: "grpc"
+
+    dcRedirectionPolicy:
+      policy: {{ default .Env.DC_REDIRECT_POLICY "selected-apis-forwarding" }}
+      toDC: ""
+
+    archival:
+      history:
+        status: "disabled"
+      visibility:
+        status: "disabled"
+
+    dynamicconfig:
+      client: filebased
+      filebased:
+        filepath: "/etc/cadence/config/dynamicconfig/config.yaml"
+        pollInterval: "10s"
+
+  dynamic_config.yaml: |-
+    {}

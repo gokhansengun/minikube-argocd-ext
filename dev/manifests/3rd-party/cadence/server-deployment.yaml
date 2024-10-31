@@ -1,0 +1,430 @@
+---
+# Source: cadence/templates/server-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cadence-frontend
+  labels:
+    app.kubernetes.io/name: cadence
+    helm.sh/chart: cadence-0.24.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/version: 0.24.0
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: cadence
+  annotations:
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cadence
+      app.kubernetes.io/instance: cadence
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cadence
+        helm.sh/chart: cadence-0.24.2
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: cadence
+        app.kubernetes.io/version: 0.24.0
+        app.kubernetes.io/component: frontend
+        app.kubernetes.io/part-of: cadence
+      annotations:
+        checksum/config: 19345815055ac259e5bb6617a4f8c56ff89310d82126484fd21755a09e403180
+        pia-team.com/app: cadence-frontend
+        pia-team.com/app-logo: cadence-frontend
+        pia-team.com/app-title: Cadence Frontend
+    spec:
+      securityContext:
+        fsGroup: 2000
+      initContainers: []
+      containers:
+      - name: cadence-frontend
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/ubercadence/server:0.24.0"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: SERVICES
+          value: frontend
+        - name: CADENCE_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cadence-default-store
+              key: password
+        - name: CADENCE_VISIBILITY_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cadence-visibility-store
+              key: password
+        - name: CADENCE_HOME
+          value: /cadence-home
+        ports:
+        - name: rpc
+          containerPort: 7933
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        livenessProbe:
+          initialDelaySeconds: 150
+          tcpSocket:
+            port: rpc
+        readinessProbe:
+          initialDelaySeconds: 10
+          tcpSocket:
+            port: rpc
+        volumeMounts:
+        - name: config
+          mountPath: /etc/cadence/config/config_template.yaml
+          subPath: config_template.yaml
+        - name: config
+          mountPath: /etc/cadence/config/dynamicconfig/config.yaml
+          subPath: dynamic_config.yaml
+        - name: cadence-home
+          mountPath: /cadence-home
+        - name: cadence-startup-scripts
+          mountPath: /start-cadence.sh
+          subPath: start-cadence.sh
+        resources: {}
+      volumes:
+      - name: config
+        configMap:
+          name: cadence
+      - name: cadence-home
+        emptyDir: {}
+      - name: cadence-startup-scripts
+        configMap:
+          name: cadence-startup-scripts
+          defaultMode: 511
+      imagePullSecrets:
+      - name: reg-creds
+  progressDeadlineSeconds: 3600
+---
+# Source: cadence/templates/server-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cadence-history
+  labels:
+    app.kubernetes.io/name: cadence
+    helm.sh/chart: cadence-0.24.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/version: 0.24.0
+    app.kubernetes.io/component: history
+    app.kubernetes.io/part-of: cadence
+  annotations:
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cadence
+      app.kubernetes.io/instance: cadence
+      app.kubernetes.io/component: history
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cadence
+        helm.sh/chart: cadence-0.24.2
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: cadence
+        app.kubernetes.io/version: 0.24.0
+        app.kubernetes.io/component: history
+        app.kubernetes.io/part-of: cadence
+      annotations:
+        checksum/config: 19345815055ac259e5bb6617a4f8c56ff89310d82126484fd21755a09e403180
+    spec:
+      securityContext:
+        fsGroup: 2000
+      initContainers: []
+      containers:
+      - name: cadence-history
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/ubercadence/server:0.24.0"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: SERVICES
+          value: history
+        - name: CADENCE_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cadence-default-store
+              key: password
+        - name: CADENCE_VISIBILITY_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cadence-visibility-store
+              key: password
+        - name: CADENCE_HOME
+          value: /cadence-home
+        ports:
+        - name: rpc
+          containerPort: 7934
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        livenessProbe:
+          initialDelaySeconds: 150
+          tcpSocket:
+            port: rpc
+        readinessProbe:
+          initialDelaySeconds: 10
+          tcpSocket:
+            port: rpc
+        volumeMounts:
+        - name: config
+          mountPath: /etc/cadence/config/config_template.yaml
+          subPath: config_template.yaml
+        - name: config
+          mountPath: /etc/cadence/config/dynamicconfig/config.yaml
+          subPath: dynamic_config.yaml
+        - name: cadence-home
+          mountPath: /cadence-home
+        - name: cadence-startup-scripts
+          mountPath: /start-cadence.sh
+          subPath: start-cadence.sh
+        resources:
+          requests:
+            cpu: 25m
+            memory: 150Mi
+      volumes:
+      - name: config
+        configMap:
+          name: cadence
+      - name: cadence-home
+        emptyDir: {}
+      - name: cadence-startup-scripts
+        configMap:
+          name: cadence-startup-scripts
+          defaultMode: 511
+      imagePullSecrets:
+      - name: reg-creds
+  progressDeadlineSeconds: 3600
+---
+# Source: cadence/templates/server-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cadence-matching
+  labels:
+    app.kubernetes.io/name: cadence
+    helm.sh/chart: cadence-0.24.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/version: 0.24.0
+    app.kubernetes.io/component: matching
+    app.kubernetes.io/part-of: cadence
+  annotations:
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cadence
+      app.kubernetes.io/instance: cadence
+      app.kubernetes.io/component: matching
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cadence
+        helm.sh/chart: cadence-0.24.2
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: cadence
+        app.kubernetes.io/version: 0.24.0
+        app.kubernetes.io/component: matching
+        app.kubernetes.io/part-of: cadence
+      annotations:
+        checksum/config: 19345815055ac259e5bb6617a4f8c56ff89310d82126484fd21755a09e403180
+    spec:
+      securityContext:
+        fsGroup: 2000
+      initContainers: []
+      containers:
+      - name: cadence-matching
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/ubercadence/server:0.24.0"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: SERVICES
+          value: matching
+        - name: CADENCE_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cadence-default-store
+              key: password
+        - name: CADENCE_VISIBILITY_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cadence-visibility-store
+              key: password
+        - name: CADENCE_HOME
+          value: /cadence-home
+        ports:
+        - name: rpc
+          containerPort: 7935
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        livenessProbe:
+          initialDelaySeconds: 150
+          tcpSocket:
+            port: rpc
+        readinessProbe:
+          initialDelaySeconds: 10
+          tcpSocket:
+            port: rpc
+        volumeMounts:
+        - name: config
+          mountPath: /etc/cadence/config/config_template.yaml
+          subPath: config_template.yaml
+        - name: config
+          mountPath: /etc/cadence/config/dynamicconfig/config.yaml
+          subPath: dynamic_config.yaml
+        - name: cadence-home
+          mountPath: /cadence-home
+        - name: cadence-startup-scripts
+          mountPath: /start-cadence.sh
+          subPath: start-cadence.sh
+        resources: {}
+      volumes:
+      - name: config
+        configMap:
+          name: cadence
+      - name: cadence-home
+        emptyDir: {}
+      - name: cadence-startup-scripts
+        configMap:
+          name: cadence-startup-scripts
+          defaultMode: 511
+      imagePullSecrets:
+      - name: reg-creds
+  progressDeadlineSeconds: 3600
+---
+# Source: cadence/templates/server-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cadence-worker
+  labels:
+    app.kubernetes.io/name: cadence
+    helm.sh/chart: cadence-0.24.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/version: 0.24.0
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: cadence
+  annotations:
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cadence
+      app.kubernetes.io/instance: cadence
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cadence
+        helm.sh/chart: cadence-0.24.2
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: cadence
+        app.kubernetes.io/version: 0.24.0
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/part-of: cadence
+      annotations:
+        checksum/config: 19345815055ac259e5bb6617a4f8c56ff89310d82126484fd21755a09e403180
+    spec:
+      securityContext:
+        fsGroup: 2000
+      initContainers: []
+      containers:
+      - name: cadence-worker
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/ubercadence/server:0.24.0"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: SERVICES
+          value: worker
+        - name: CADENCE_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cadence-default-store
+              key: password
+        - name: CADENCE_VISIBILITY_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cadence-visibility-store
+              key: password
+        - name: CADENCE_HOME
+          value: /cadence-home
+        ports:
+        - name: rpc
+          containerPort: 7939
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        livenessProbe:
+          initialDelaySeconds: 150
+          tcpSocket:
+            port: rpc
+        readinessProbe:
+          initialDelaySeconds: 10
+          tcpSocket:
+            port: rpc
+        volumeMounts:
+        - name: config
+          mountPath: /etc/cadence/config/config_template.yaml
+          subPath: config_template.yaml
+        - name: config
+          mountPath: /etc/cadence/config/dynamicconfig/config.yaml
+          subPath: dynamic_config.yaml
+        - name: cadence-home
+          mountPath: /cadence-home
+        - name: cadence-startup-scripts
+          mountPath: /start-cadence.sh
+          subPath: start-cadence.sh
+        resources: {}
+      volumes:
+      - name: config
+        configMap:
+          name: cadence
+      - name: cadence-home
+        emptyDir: {}
+      - name: cadence-startup-scripts
+        configMap:
+          name: cadence-startup-scripts
+          defaultMode: 511
+      imagePullSecrets:
+      - name: reg-creds
+  progressDeadlineSeconds: 3600

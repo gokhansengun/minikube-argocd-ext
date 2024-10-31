@@ -1,0 +1,28 @@
+---
+# Source: xxxxx/templates/cadence-web-ingress.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cadence-web
+
+  annotations:
+    pia-team.com/family: orbitant
+
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: cadence.orbitant.192.168.21.10.nip.io
+    http:
+      paths:
+      - backend:
+          service:
+            name: cadence-web
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - cadence.orbitant.192.168.21.10.nip.io
+    secretName: cadence-web-tls

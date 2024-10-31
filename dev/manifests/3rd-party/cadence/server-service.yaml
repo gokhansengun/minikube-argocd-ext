@@ -1,0 +1,193 @@
+---
+# Source: cadence/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cadence-frontend
+  annotations:
+    pia-team.com/app: cadence-frontend
+    pia-team.com/app-logo: cadence-frontend
+    pia-team.com/app-title: Cadence Frontend
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+  labels:
+    app.kubernetes.io/name: cadence
+    helm.sh/chart: cadence-0.24.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/version: 0.24.0
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: cadence
+spec:
+  type: ClusterIP
+  ports:
+  - port: 7933
+    targetPort: rpc
+    protocol: TCP
+    name: rpc
+  selector:
+    app.kubernetes.io/name: cadence
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/component: frontend
+---
+# Source: cadence/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cadence-frontend-headless
+
+  labels:
+    app.kubernetes.io/name: cadence
+    helm.sh/chart: cadence-0.24.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/version: 0.24.0
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: cadence
+    app.kubernetes.io/headless: 'true'
+  annotations:
+    # Use this annotation in addition to the actual field below because the
+    # annotation will stop being respected soon but the field is broken in
+    # some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    pia-team.com/app: cadence-frontend
+    pia-team.com/app-logo: cadence-frontend
+    pia-team.com/app-title: Cadence Frontend
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - port: 7933
+    targetPort: rpc
+    protocol: TCP
+    name: rpc
+  - port: 9090
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  selector:
+    app.kubernetes.io/name: cadence
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/component: frontend
+---
+# Source: cadence/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cadence-matching-headless
+
+  labels:
+    app.kubernetes.io/name: cadence
+    helm.sh/chart: cadence-0.24.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/version: 0.24.0
+    app.kubernetes.io/component: matching
+    app.kubernetes.io/part-of: cadence
+    app.kubernetes.io/headless: 'true'
+  annotations:
+    # Use this annotation in addition to the actual field below because the
+    # annotation will stop being respected soon but the field is broken in
+    # some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - port: 7935
+    targetPort: rpc
+    protocol: TCP
+    name: rpc
+  - port: 9090
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  selector:
+    app.kubernetes.io/name: cadence
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/component: matching
+---
+# Source: cadence/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cadence-history-headless
+
+  labels:
+    app.kubernetes.io/name: cadence
+    helm.sh/chart: cadence-0.24.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/version: 0.24.0
+    app.kubernetes.io/component: history
+    app.kubernetes.io/part-of: cadence
+    app.kubernetes.io/headless: 'true'
+  annotations:
+    # Use this annotation in addition to the actual field below because the
+    # annotation will stop being respected soon but the field is broken in
+    # some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - port: 7934
+    targetPort: rpc
+    protocol: TCP
+    name: rpc
+  - port: 9090
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  selector:
+    app.kubernetes.io/name: cadence
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/component: history
+---
+# Source: cadence/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cadence-worker-headless
+
+  labels:
+    app.kubernetes.io/name: cadence
+    helm.sh/chart: cadence-0.24.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/version: 0.24.0
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: cadence
+    app.kubernetes.io/headless: 'true'
+  annotations:
+    # Use this annotation in addition to the actual field below because the
+    # annotation will stop being respected soon but the field is broken in
+    # some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    pia-team.com/role: pia.k8s.cadence/0.5.0
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - port: 7939
+    targetPort: rpc
+    protocol: TCP
+    name: rpc
+  - port: 9090
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  selector:
+    app.kubernetes.io/name: cadence
+    app.kubernetes.io/instance: cadence
+    app.kubernetes.io/component: worker

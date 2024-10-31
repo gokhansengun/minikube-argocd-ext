@@ -1,0 +1,10 @@
+---
+# Source: cadence/templates/dnext-cadence-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.cadence/0.5.0
+kind: ConfigMap
+metadata:
+  name: dnext-cadence-config
+  annotations:
+    pia-team.com/role: pia.k8s.cadence/0.5.0
