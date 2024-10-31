@@ -1,0 +1,24 @@
+---
+# Source: in-cluster-proxy/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: in-cluster-proxy
+  labels:
+    app.kubernetes.io/name: in-cluster-proxy
+    helm.sh/chart: in-cluster-proxy-0.4.0
+    app.kubernetes.io/instance: in-cluster-proxy
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    slug: in-cluster-proxy
+    pia-team.com/role: pia.k8s.in-cluster-proxy/0.6.2
+spec:
+  type: ClusterIP
+  ports:
+  - port: 443
+    targetPort: 8443
+    protocol: TCP
+    name: https
+  selector:
+    app.kubernetes.io/name: in-cluster-proxy
+    app.kubernetes.io/instance: in-cluster-proxy

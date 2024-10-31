@@ -1,0 +1,10 @@
+---
+# Source: in-cluster-proxy/templates/dnext-in-cluster-proxy-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.in-cluster-proxy/0.6.2
+kind: ConfigMap
+metadata:
+  name: dnext-in-cluster-proxy-config
+  annotations:
+    pia-team.com/role: pia.k8s.in-cluster-proxy/0.6.2

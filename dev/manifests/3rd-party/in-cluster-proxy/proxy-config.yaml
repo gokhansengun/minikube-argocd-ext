@@ -1,0 +1,35 @@
+---
+# Source: in-cluster-proxy/templates/proxy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: in-cluster-proxy-conf
+  labels:
+    app.kubernetes.io/name: in-cluster-proxy
+    helm.sh/chart: in-cluster-proxy-0.4.0
+    app.kubernetes.io/instance: in-cluster-proxy
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/role: pia.k8s.in-cluster-proxy/0.6.2
+data:
+  proxy.conf: |
+    server {
+      listen       8443    ssl;
+      server_name  diam.orbitant.192.168.21.10.nip.io;
+
+      ssl_certificate /etc/nginx/certs/in-cluster-proxy-keycloak/cert-chain.pem;
+      ssl_certificate_key /etc/nginx/certs/in-cluster-proxy-keycloak/private-key.pem;
+
+      ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+      ssl_prefer_server_ciphers on;
+
+      location / {
+        proxy_pass http://keycloak:80;
+        proxy_set_header Host $host;
+      }
+
+      error_page   500 502 503 504  /50x.html;
+      location = /50x.html {
+        root   /usr/share/nginx/html;
+      }
+    }

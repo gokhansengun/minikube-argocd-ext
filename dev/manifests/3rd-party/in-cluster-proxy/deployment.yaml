@@ -1,0 +1,53 @@
+---
+# Source: in-cluster-proxy/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: in-cluster-proxy
+  labels:
+    app.kubernetes.io/name: in-cluster-proxy
+    helm.sh/chart: in-cluster-proxy-0.4.0
+    app.kubernetes.io/instance: in-cluster-proxy
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/role: pia.k8s.in-cluster-proxy/0.6.2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: in-cluster-proxy
+      app.kubernetes.io/instance: in-cluster-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: in-cluster-proxy
+        app.kubernetes.io/instance: in-cluster-proxy
+      annotations:
+        checksum/config: d4ef89dfdafb2d594eea151fbbee7079742ef603ab19c03540776fd1754b6fc1
+    spec:
+      containers:
+      - name: in-cluster-proxy
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/orbitant-ui-base:1.25.3-2"
+        volumeMounts:
+        - name: in-cluster-proxy-conf
+          mountPath: /etc/nginx/conf.d/
+        - name: in-cluster-proxy-keycloak
+          mountPath: /etc/nginx/certs/in-cluster-proxy-keycloak
+      volumes:
+      - name: in-cluster-proxy-conf
+        configMap:
+          name: in-cluster-proxy-conf
+      - name: in-cluster-proxy-keycloak
+        secret:
+          secretName: in-cluster-proxy-keycloak
+      terminationGracePeriodSeconds: 0
+
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 0
+        fsGroup: 1000
+
+      imagePullSecrets:
+      - name: reg-creds
+      hostAliases:
+  progressDeadlineSeconds: 3600
