@@ -1,0 +1,31 @@
+---
+# Source: jenkins/templates/jenkins-controller-networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: "jenkins-jenkins-controller"
+  namespace: hornet
+  labels:
+    "app.kubernetes.io/name": 'jenkins'
+    "helm.sh/chart": "jenkins-3.8.8"
+    "app.kubernetes.io/managed-by": "Helm"
+    "app.kubernetes.io/instance": "jenkins"
+    "app.kubernetes.io/component": "jenkins-controller"
+  annotations:
+    pia-team.com/role: pia.k8s.jenkins.customer/0.12.0
+spec:
+  podSelector:
+    matchLabels:
+      "app.kubernetes.io/component": "jenkins-controller"
+      "app.kubernetes.io/instance": "jenkins"
+  ingress:
+    # Allow web access to the UI
+  - ports:
+    - port: 8080
+    # Allow inbound connections from agents
+  - from:
+    - podSelector:
+        matchLabels:
+          "jenkins/jenkins-jenkins-agent": "true"
+    ports:
+    - port: 50000

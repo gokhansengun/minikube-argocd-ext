@@ -1,0 +1,160 @@
+---
+# Source: jenkins/templates/config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins
+  namespace: hornet
+  labels:
+    "app.kubernetes.io/name": 'jenkins'
+    "app.kubernetes.io/managed-by": "Helm"
+    "app.kubernetes.io/instance": "jenkins"
+    "app.kubernetes.io/component": "jenkins-controller"
+  annotations:
+    pia-team.com/role: pia.k8s.jenkins.customer/0.12.0
+data:
+  apply_config.sh: |-
+    set -e
+    echo "disable Setup Wizard"
+    # Prevent Setup Wizard when JCasC is enabled
+    echo $JENKINS_VERSION > /var/jenkins_home/jenkins.install.UpgradeWizard.state
+    echo $JENKINS_VERSION > /var/jenkins_home/jenkins.install.InstallUtil.lastExecVersion
+    echo "download plugins"
+    # Install missing plugins
+    cp /var/jenkins_config/plugins.txt /var/jenkins_home;
+    rm -rf /usr/share/jenkins/ref/plugins/*.lock
+    version () { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
+    if [ -f "/usr/share/jenkins/jenkins.war" ] && [ -n "$(command -v jenkins-plugin-cli)" 2>/dev/null ] && [ $(version $(jenkins-plugin-cli --version)) -ge $(version "2.1.1") ]; then
+      jenkins-plugin-cli --verbose --war "/usr/share/jenkins/jenkins.war" --plugin-file "/var/jenkins_home/plugins.txt" --latest true;
+    else
+      /usr/local/bin/install-plugins.sh `echo $(cat /var/jenkins_home/plugins.txt)`;
+    fi
+    echo "copy plugins to shared volume"
+    # Copy plugins to shared volume
+    yes n | cp -i /usr/share/jenkins/ref/plugins/* /var/jenkins_plugins/;
+    echo "finished initialization"
+  plugins.txt: |-
+    ace-editor:1.1
+    ansicolor:1.0.4
+    antisamy-markup-formatter:162.v0e6ec0fcfcf6
+    apache-httpcomponents-client-4-api:4.5.14-208.v438351942757
+    asm-api:9.7-33.v4d23ef79fcc8
+    authentication-tokens:1.119.v50285141b_7e1
+    bootstrap4-api:4.6.0-6
+    bootstrap5-api:5.3.3-1
+    bouncycastle-api:2.30.1.78.1-248.ve27176eb_46cb_
+    branch-api:2.1178.v969d9eb_c728e
+    build-user-vars-plugin:176.vb_9c7907fd524
+    caffeine-api:3.1.8-133.v17b_1ff2e0599
+    checks-api:2.2.1
+    cloudbees-folder:6.951.v5f91d88d76b_b_
+    command-launcher:115.vd8b_301cc15d0
+    commons-lang3-api:3.17.0-84.vb_b_938040b_078
+    commons-text-api:1.12.0-129.v99a_50df237f7
+    configuration-as-code:1850.va_a_8c31d3158b_
+    configuration-as-code-groovy:1.1
+    credentials:1378.v81ef4269d764
+    credentials-binding:681.vf91669a_32e45
+    dark-theme:479.v661b_1b_911c01
+    data-tables-api:2.1.6-1
+    display-url-api:2.204.vf6fddd8a_8b_e9
+    docker-commons:443.v921729d5611d
+    docker-workflow:580.vc0c340686b_54
+    durable-task:577.v2a_8a_4b_7c0247
+    echarts-api:5.5.1-1
+    eddsa-api:0.3.0-4.v84c6f0f4969e
+    extended-read-permission:53.v6499940139e5
+    font-awesome-api:6.6.0-2
+    git:5.4.1
+    git-client:5.0.0
+    git-server:126.v0d945d8d2b_39
+    github:1.40.0
+    github-api:1.321-468.v6a_9f5f2d5a_7e
+    github-branch-source:1797.v86fdb_4d57d43
+    github-oauth:597.ve0c3480fcb_d0
+    google-chat-notification:147.v68a_27a_f15577
+    google-oauth-plugin:1.330.vf5e86021cb_ec
+    gson-api:2.11.0-41.v019fcf6125dc
+    handlebars:3.0.8
+    hashicorp-vault-plugin:370.v946b_53544a_30
+    hidden-parameter:237.v4b_df26c7a_f0e
+    instance-identity:185.v303dc7c645f9
+    ionicons-api:74.v93d5eb_813d5f
+    jackson2-api:2.17.0-379.v02de8ec9f64c
+    jakarta-activation-api:2.1.3-1
+    jakarta-mail-api:2.1.3-1
+    javax-activation-api:1.2.0-7
+    javax-mail-api:1.6.2-10
+    jaxb:2.3.9-1
+    jdk-tool:80.v8a_dee33ed6f0
+    jjwt-api:0.11.5-112.ve82dfb_224b_a_d
+    job-dsl:1.89
+    joda-time-api:2.13.0-85.vb_64d1c2921f1
+    jquery-detached:1.2.1
+    jquery3-api:3.7.1-2
+    jsch:0.2.16-86.v42e010d9484b_
+    json-api:20240303-41.v94e11e6de726
+    json-path-api:2.9.0-58.v62e3e85b_a_655
+    junit:1300.v03d9d8a_cf1fb_
+    kubernetes:4287.v73451380b_576
+    kubernetes-client-api:6.10.0-240.v57880ce8b_0b_2
+    kubernetes-credentials:189.v90a_488b_d1d65
+    lockable-resources:1309.ve21874387edf
+    mailer:472.vf7c289a_4b_420
+    mask-passwords:173.v6a_077a_291eb_5
+    matrix-auth:3.2.2
+    matrix-project:832.va_66e270d2946
+    metrics:4.2.21-451.vd51df8df52ec
+    mina-sshd-api-common:2.13.2-125.v200281b_61d59
+    mina-sshd-api-core:2.13.2-125.v200281b_61d59
+    momentjs:1.1.1
+    oauth-credentials:0.653.v14cf2088e950
+    okhttp-api:4.11.0-172.vda_da_1feeb_c6e
+    parameter-separator:166.vd0120849b_386
+    performance:962.v95a_4913d332e
+    pipeline-build-step:540.vb_e8849e1a_b_d8
+    pipeline-githubnotify-step:49.vf37bf92d2bc8
+    pipeline-graph-analysis:216.vfd8b_ece330ca_
+    pipeline-groovy-lib:730.ve57b_34648c63
+    pipeline-input-step:495.ve9c153f6067b_
+    pipeline-milestone-step:119.vdfdc43fc3b_9a_
+    pipeline-model-api:2.2214.vb_b_34b_2ea_9b_83
+    pipeline-model-definition:2.2214.vb_b_34b_2ea_9b_83
+    pipeline-model-extensions:2.2214.vb_b_34b_2ea_9b_83
+    pipeline-rest-api:2.34
+    pipeline-stage-step:312.v8cd10304c27a_
+    pipeline-stage-tags-metadata:2.2214.vb_b_34b_2ea_9b_83
+    pipeline-stage-view:2.34
+    plain-credentials:183.va_de8f1dd5a_2b_
+    plugin-util-api:4.1.0
+    popper-api:1.16.1-3
+    popper2-api:2.11.6-5
+    prism-api:1.29.0-17
+    resource-disposer:0.23
+    role-strategy:743.v142ea_b_d5f1d3
+    saml:4.464.vea_cb_75d7f5e0
+    scm-api:696.v778d637b_a_762
+    script-security:1362.v67dc1f0e1b_b_3
+    simple-theme-plugin:196.v96d9592f4efa_
+    snakeyaml-api:2.3-123.v13484c65210a_
+    ssh-credentials:343.v884f71d78167
+    sshd:3.330.vc866a_8389b_58
+    structs:338.v848422169819
+    theme-manager:262.vc57ee4a_eda_5d
+    timestamper:1.27
+    token-macro:400.v35420b_922dcb_
+    trilead-api:2.147.vb_73cc728a_32e
+    uno-choice:2.8.3
+    variant:60.v7290fc0eb_b_cd
+    windows-slaves:1.8.1
+    workflow-aggregator:600.vb_57cdd26fdd7
+    workflow-api:1336.vee415d95c521
+    workflow-basic-steps:1058.vcb_fc1e3a_21a_9
+    workflow-cps:3961.ve48ee2c44a_b_3
+    workflow-durable-task-step:1371.vb_7cec8f3b_95e
+    workflow-job:1436.vfa_244484591f
+    workflow-multibranch:795.ve0cb_1f45ca_9a_
+    workflow-scm-step:427.v4ca_6512e7df1
+    workflow-step-api:678.v3ee58b_469476
+    workflow-support:920.v59f71ce16f04
+    ws-cleanup:0.46

@@ -1,0 +1,28 @@
+---
+# Source: jenkins/templates/jenkins-controller-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: hornet
+  labels:
+    "app.kubernetes.io/name": 'jenkins'
+    "helm.sh/chart": "jenkins-3.8.8"
+    "app.kubernetes.io/managed-by": "Helm"
+    "app.kubernetes.io/instance": "jenkins"
+    "app.kubernetes.io/component": "jenkins-controller"
+  annotations:
+    pia-team.com/family: orbitant
+    pia-team.com/role: pia.k8s.jenkins.customer/0.12.0
+  name: jenkins
+spec:
+  ingressClassName: "nginx"
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: jenkins
+            port:
+              number: 8080
+        pathType: ImplementationSpecific
+    host: "jenkins.orbitant.192.168.21.10.nip.io"

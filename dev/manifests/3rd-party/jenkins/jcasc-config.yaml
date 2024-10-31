@@ -1,0 +1,192 @@
+---
+# Source: jenkins/templates/jcasc-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-jenkins-config-jenkins-conf
+  namespace: hornet
+  labels:
+    "app.kubernetes.io/name": jenkins
+    "helm.sh/chart": "jenkins-3.8.8"
+    "app.kubernetes.io/managed-by": "Helm"
+    "app.kubernetes.io/instance": "jenkins"
+    "app.kubernetes.io/component": "jenkins-controller"
+    jenkins-jenkins-config: "true"
+  annotations:
+    pia-team.com/role: pia.k8s.jenkins.customer/0.12.0
+data:
+  jenkins-conf.yaml: |-
+    jenkins:
+      # TODO: gseng - change this message
+      systemMessage: Welcome to Orbitant/Voltran Customer Box!
+
+      numExecutors: 1
+      quietPeriod: 0
+
+      securityRealm:
+        local:
+          allowsSignup: false
+          enableCaptcha: false
+          users:
+            - id: "admin"
+              password: "RSNpprhepxps7KGecfMi"
+
+      clouds:
+        - kubernetes:
+            name: "kubernetes"
+            serverUrl: "https://kubernetes.hornet"
+            serverCertificate: ""
+            skipTlsVerify: false
+            credentialsId: ""
+            namespace: "hornet"
+            jenkinsUrl: "http://jenkins.hornet:8080"
+            jenkinsTunnel: "jenkins-agent.hornet:50000"
+            containerCapStr: 3
+            maxRequestsPerHostStr: 64
+            retentionTimeout: 5
+            connectTimeout: 10
+            readTimeout: 20
+
+      globalNodeProperties:
+        - envVars:
+            env:
+              - key: COMPANY_NAME
+                value: ""
+
+      projectNamingStrategy:
+        roleBased:
+          forceExistingJobs: false
+
+      authorizationStrategy:
+        roleBased:
+          roles:
+            global:
+              - name: "admin"
+                description: "Jenkins administrators"
+                permissions:
+                  - "Overall/Administer"
+                entries:
+                  - user: "admin"
+
+      disabledAdministrativeMonitors:
+        - jenkins.model.BuiltInNodeMigration
+        - hudson.diagnosis.ReverseProxySetupMonitor
+        - jenkins.monitor.JavaVersionRecommendationAdminMonitor
+        - hudson.model.UpdateCenter$CoreUpdateMonitor
+        - jenkins.security.UpdateSiteWarningsMonitor
+        - jenkins.diagnostics.ControllerExecutorsAgents
+        - jenkins.security.QueueItemAuthenticatorMonitor
+        - jenkins.diagnostics.ControllerExecutorsNoAgents
+        - hudson.PluginManager$PluginDeprecationMonitor
+
+    unclassified:
+      location:
+        adminAddress: jenkins-customer-boxes@pia-team.com
+        url: https://jenkins.orbitant.192.168.21.10.nip.io/
+
+      ansiColorBuildWrapper:
+        globalColorMapName: "xterm"
+
+      timestamper:
+        allPipelines: true
+
+    appearance:
+      themeManager:
+        disableUserThemes: true
+        theme: "darkSystem"
+
+    credentials:
+      system:
+        domainCredentials:
+        - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: git.username.password
+              username: "${JENKINS_CASC_GIT_USERNAME}"
+              password: "${JENKINS_CASC_GIT_PASSWORD}"
+              description: Git username/password
+          - vaultTokenCredential:
+              scope: GLOBAL
+              id: orbitant.vault.deployer.token
+              token: "${JENKINS_CASC_VAULT_DEPLOYER_TOKEN_ORBITANT}"
+              description: Orbitant Vault Deployer Token
+
+    groovy:
+      - script: >
+          while (!new File("/tmp/pia/groovy-render/customer-deploy-a-single-app-of-dnext-orbitant-Orbitant.groovy").exists())
+          {
+            sleep(1000);
+            println('Sleeping until job files are synced to the file system');
+          }
+
+          sleep(2000);
+
+          println('Sleeping complete, job files must have been synced to the file system');
+
+    security:
+      # TODO: gseng - enable this later to disable security warnings with list
+      
+      scriptApproval:
+        approvedSignatures:
+          - field com.datapipe.jenkins.vault.credentials.VaultTokenCredential token
+          - method com.cloudbees.plugins.credentials.common.IdCredentials getId
+          - method com.cloudbees.plugins.credentials.common.PasswordCredentials getPassword
+          - method com.michelin.cio.hudson.plugins.rolestrategy.Role getName
+          - method com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy getGrantedRoles java.lang.String
+          - method groovy.json.JsonSlurperClassic parseText java.lang.String
+          - method groovy.lang.GroovyObject invokeMethod java.lang.String java.lang.Object
+          - method hudson.model.Run getLog
+          - method hudson.model.User getAuthorities
+          - method hudson.security.SecurityRealm loadUserByUsername java.lang.String
+          - method java.io.BufferedReader readLine
+          - method java.io.File delete
+          - method java.io.File exists
+          - method java.io.File getAbsolutePath
+          - method java.lang.Process getInputStream
+          - method java.lang.Process waitFor
+          - method java.lang.ProcessBuilder environment
+          - method java.lang.ProcessBuilder start
+          - method java.net.HttpURLConnection setRequestMethod java.lang.String
+          - method java.net.URL openConnection
+          - method java.net.URLConnection connect
+          - method java.net.URLConnection getContent
+          - method java.net.URLConnection getInputStream
+          - method java.net.URLConnection getOutputStream
+          - method java.net.URLConnection setDoOutput boolean
+          - method java.net.URLConnection setRequestProperty java.lang.String java.lang.String
+          - method java.util.Scanner hasNextLine
+          - method java.util.Scanner nextLine
+          - method jenkins.model.Jenkins getAuthorizationStrategy
+          - method jenkins.model.Jenkins getSecurityRealm
+          - method org.acegisecurity.userdetails.UserDetails getAuthorities
+          - method org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper getRawBuild
+          - new groovy.json.JsonSlurperClassic
+          - new java.io.BufferedReader java.io.Reader
+          - new java.io.BufferedWriter java.io.Writer
+          - new java.io.File java.lang.String
+          - new java.io.InputStreamReader java.io.InputStream
+          - new java.io.OutputStreamWriter java.io.OutputStream
+          - new java.lang.ProcessBuilder java.lang.String[]
+          - new java.lang.ProcessBuilder java.util.List
+          - new java.lang.StringBuilder
+          - new java.util.ArrayList
+          - new java.util.Scanner java.io.InputStream
+          - staticField com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy GLOBAL
+          - staticMethod com.cloudbees.plugins.credentials.CredentialsProvider lookupCredentials java.lang.Class hudson.model.ItemGroup org.acegisecurity.Authentication java.util.List
+          - staticMethod groovy.json.JsonOutput toJson java.lang.Object
+          - staticMethod hudson.model.User current
+          - staticMethod java.io.File createTempFile java.lang.String java.lang.String
+          - staticMethod java.lang.System getProperty java.lang.String
+          - staticMethod java.util.logging.Logger getLogger java.lang.String
+          - staticMethod jenkins.model.Jenkins getInstance
+          - staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods any java.lang.Object
+          - staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.util.Collection java.lang.String
+          - staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getText java.io.InputStream
+          - staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getText java.net.URL
+          - staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sprintf java.lang.Object java.lang.String java.lang.Object
+          - staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods write java.io.File java.lang.String
+
+    jobs:
+      - file: /tmp/pia/groovy-render/customer-deploy-a-full-set-of-dnext-orbitant-Orbitant.groovy
+      - file: /tmp/pia/groovy-render/customer-deploy-a-single-app-of-dnext-orbitant-Orbitant.groovy
+      - file: /tmp/pia/groovy-render/customer-deploy-a-sub-set-of-dnext-orbitant-Orbitant.groovy

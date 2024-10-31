@@ -1,0 +1,10 @@
+---
+# Source: jenkins/templates/dnext-jenkins-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.jenkins.customer/0.12.0
+kind: ConfigMap
+metadata:
+  name: dnext-jenkins-config
+  annotations:
+    pia-team.com/role: pia.k8s.jenkins.customer/0.12.0

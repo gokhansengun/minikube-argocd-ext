@@ -1,0 +1,30 @@
+---
+# Source: jenkins/templates/jenkins-controller-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins
+  namespace: hornet
+  labels:
+    "app.kubernetes.io/name": 'jenkins'
+    "helm.sh/chart": "jenkins-3.8.8"
+    "app.kubernetes.io/managed-by": "Helm"
+    "app.kubernetes.io/instance": "jenkins"
+    "app.kubernetes.io/component": "jenkins-controller"
+  annotations:
+    pia-team.com/role: pia.k8s.jenkins.customer/0.12.0
+spec:
+  ports:
+  - port: 8080
+    name: http
+    targetPort: 8080
+  - port: 5000
+    name: http-app-server
+    targetPort: 5000
+  - port: 5001
+    name: http-ci-utility
+    targetPort: 5001
+  selector:
+    "app.kubernetes.io/component": "jenkins-controller"
+    "app.kubernetes.io/instance": "jenkins"
+  type: ClusterIP
