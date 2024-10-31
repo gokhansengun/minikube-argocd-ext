@@ -1,0 +1,18 @@
+---
+# Source: logstash/templates/poddisruptionbudget.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: "logstash-logstash-pdb"
+  labels:
+    app: "logstash-logstash"
+    chart: "logstash"
+    heritage: "Helm"
+    release: "logstash"
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: "logstash-logstash"

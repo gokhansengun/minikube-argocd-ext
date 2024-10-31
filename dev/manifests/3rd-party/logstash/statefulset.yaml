@@ -1,0 +1,118 @@
+---
+# Source: logstash/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: logstash-logstash
+  labels:
+    app: "logstash-logstash"
+    chart: "logstash"
+    heritage: "Helm"
+    release: "logstash"
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+spec:
+  serviceName: logstash-logstash-headless
+  selector:
+    matchLabels:
+      app: "logstash-logstash"
+      release: "logstash"
+  replicas: 1
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      name: "logstash-logstash"
+      labels:
+        app: "logstash-logstash"
+        chart: "logstash"
+        heritage: "Helm"
+        release: "logstash"
+      annotations:
+        pia-team.com/app: "logstash"
+        pia-team.com/app-logo: "logstash"
+        pia-team.com/app-title: "Logstash"
+        configchecksum: 80092b0e8cacf8fd925c0b06168e00c6d7da6cb377dc2ae552f92c21ac34a07
+        pipelinechecksum: 3c8a76e073821022af68d9acf8b5cbd0d499ae7610d3b30b0b99ea8eabf8083
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - "logstash-logstash"
+            topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: 120
+      volumes:
+      - name: logstashconfig
+        configMap:
+          name: logstash-logstash-config
+      - name: logstashpipeline
+        configMap:
+          name: logstash-logstash-pipeline
+      imagePullSecrets:
+      - name: reg-creds
+      containers:
+      - name: "logstash"
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/logstash:7.17.3-dnext1"
+        imagePullPolicy: "IfNotPresent"
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 300
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          successThreshold: 3
+          timeoutSeconds: 5
+        ports:
+        - name: http
+          containerPort: 9600
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2000Mi
+          requests:
+            cpu: 100m
+            memory: 1000Mi
+        env:
+        - name: LS_JAVA_OPTS
+          value: "-Xmx600m -Xms600m -Djava.security.egd=file:/dev/urandom"
+        volumeMounts:
+        - name: logstashconfig
+          mountPath: /usr/share/logstash/config/logstash.yml
+          subPath: logstash.yml
+        - name: logstashconfig
+          mountPath: /usr/share/logstash/config/pipelines.yml
+          subPath: pipelines.yml
+        - name: logstashpipeline
+          mountPath: /usr/share/logstash/pipeline/dalems.conf
+          subPath: dalems.conf
+        - name: logstashpipeline
+          mountPath: /usr/share/logstash/pipeline/ddhms.conf
+          subPath: ddhms.conf
+        - name: logstashpipeline
+          mountPath: /usr/share/logstash/pipeline/logstash.conf
+          subPath: logstash.conf

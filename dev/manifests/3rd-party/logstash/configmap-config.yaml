@@ -1,0 +1,26 @@
+---
+# Source: logstash/templates/configmap-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-logstash-config
+  labels:
+    app: "logstash-logstash"
+    chart: "logstash"
+    heritage: "Helm"
+    release: "logstash"
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+data:
+  logstash.yml: |
+    http.host: "0.0.0.0"
+    xpack.monitoring.elasticsearch.hosts: ["http://elasticsearch-master:9200"]
+    pipeline.ecs_compatibility: "v1"
+
+  pipelines.yml: |
+    - pipeline.id: logstash
+      path.config: "/usr/share/logstash/pipeline/logstash.conf"
+    - pipeline.id: ddhms
+      path.config: "/usr/share/logstash/pipeline/ddhms.conf"
+    - pipeline.id: dalems
+      path.config: "/usr/share/logstash/pipeline/dalems.conf"

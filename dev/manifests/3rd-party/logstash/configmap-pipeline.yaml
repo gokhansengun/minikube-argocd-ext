@@ -1,0 +1,190 @@
+---
+# Source: logstash/templates/configmap-pipeline.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-logstash-pipeline
+  labels:
+    app: "logstash-logstash"
+    chart: "logstash"
+    heritage: "Helm"
+    release: "logstash"
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+data:
+  dalems.conf: |
+    input {
+      kafka {
+        codec => json
+        bootstrap_servers => "kafka:9092"
+        topics_pattern => [".*_EVENT"]
+        client_id => "logstash-dalems"
+        group_id => "logstash-dalems"
+      }
+    }
+
+    filter {
+      mutate {
+        add_field => {
+          "eventName" => "%{[eventType]}"
+        }
+
+        add_field => {
+          "[auth][requestOrigin]" => "%{[originIp]}"
+        }
+
+        rename => { "[auth][userId]" => "[auth][userName]" }
+        rename => { "[auth][roles]" => "[auth][userRoles]" }
+      }
+
+      ruby {
+        code => '
+          x = event.get("[objectName]")
+          event.set("entityType",event.get("[event][#{x}][@type]"))
+          event.set("entityId",event.get("[event][#{x}][id]"))
+        '
+      }
+
+      mutate {
+        remove_field => ["[auth][authenticationToken]","[auth][groups]","event","eventType","objectName","originIp","@version","@timestamp"]
+      }
+
+      date {
+        match => [ "eventTime" , "ISO8601" , "YYYY-MM-dd HH:mm:ss" ]
+        target => "@timestamp"
+        locale => "tr"
+      }
+    }
+
+    output {
+      # TODO: gseng - remove completely later
+      # stdout { codec => json_lines }
+      elasticsearch {
+        hosts => ["http://elasticsearch-master:9200"]
+        index => "dnext-audit-log-events-%{+YYYY-MM-dd}"
+        manage_template => false
+      }
+    }
+
+  ddhms.conf: |
+    input {
+      kafka {
+        codec => json
+        bootstrap_servers => "kafka:9092"
+        topics_pattern => [".*_EVENT"]
+        client_id => "logstash-ddhms"
+        group_id => "logstash-ddhms"
+      }
+    }
+
+    filter {
+      mutate {
+        add_field => {
+          "@baseType" => "EntityHistoryRef"
+        }
+        add_field => {
+          "@type" => "EntityHistoryRef"
+        }
+      }
+
+      ruby {
+        code => '
+          x = event.get("[objectName]")
+          event.set("@referredType",event.get("[event][#{x}][@type]"))
+          event.set("id",event.get("[event][#{x}][id]"))
+          event.set("revisionId",event.get("[event][#{x}][revision]"))
+          event.set("href",event.get("[event][#{x}][href]"))
+          event.set("lastModified",event.get("[event][#{x}][updatedDate]"))
+          event.set("modifiedBy",event.get("[event][#{x}][updatedBy]"))
+          event.set("eventPayload",event.get("[event][#{x}]"))
+        '
+      }
+
+      mutate {
+        remove_field => ["eventTime","auth","trace","event","objectName","originIp","@version","@timestamp"]
+      }
+
+      date {
+        match => [ "lastModified" , "ISO8601" , "YYYY-MM-dd HH:mm:ss" ]
+        target => "@timestamp"
+        locale => "tr"
+      }
+    }
+    output {
+      # TODO: gseng - remove completely later
+      # stdout { codec => json_lines }
+      elasticsearch {
+        hosts => ["http://elasticsearch-master:9200"]
+        index => "dnext-data-history-%{+YYYY-MM-dd}"
+        manage_template => false
+      }
+    }
+
+  logstash.conf: |
+    input {
+      beats {
+        client_inactivity_timeout => 3000
+        port => 5044
+      }
+    }
+
+    filter {
+      grok {
+        match => { "message" => "(?m)%{TIMESTAMP_ISO8601:timestamp}%{SPACE}%{LOGLEVEL:level}%{SPACE}%{NUMBER:pid}%{SPACE}---%{SPACE}\[%{DATA:thread}\]%{SPACE}%{DATA:class}:%{SPACE}%{DATA:exception}\n\n%{GREEDYDATA:stacktrace}" }
+        add_tag => [ "stacktrace" ]
+      }
+
+      grok {
+        match => { "message" => "%{TIMESTAMP_ISO8601:timestamp}%{SPACE}%{LOGLEVEL:level}%{SPACE}%{NUMBER:pid}%{SPACE}---%{SPACE}\[%{DATA:thread}\]%{SPACE}%{DATA:class}:%{SPACE}%{GREEDYDATA:exception}" }
+          add_tag => [ "spring_boot_log" ]
+      }
+
+      if "stacktrace" in [tags] or "spring_boot_log" in [tags] {
+        mutate {
+          remove_tag => ["_grokparsefailure"]
+        }
+      }
+
+      date {
+        match => [ "timestamp" , "ISO8601" , "YYYY-MM-dd HH:mm:ss" ]
+        target => "@timestamp"
+        locale => "tr"
+      }
+    }
+
+    filter {
+      mutate {
+        add_field => {
+          "namespace" => "%{[kubernetes][namespace]}" 
+          "node" => "%{[kubernetes][node][name]}" 
+          "container_name" => "%{[kubernetes][container][name]}"
+          "image" => "%{[container][image][name]}"
+          "pod" => "%{[kubernetes][pod][name]}"
+          "app" => "%{[kubernetes][labels][app_kubernetes_io/instance]}"
+        }
+      }
+
+      mutate {
+        remove_field => [beat]
+        remove_field => [agent]
+        remove_field => [log]
+        remove_field => [stream]
+        remove_field => [tags]
+        remove_field => [input]
+        remove_field => [ecs]
+        remove_field => [host]
+        remove_field => [container]
+        remove_field => [kubernetes]
+      }
+    }
+
+    output {
+      # TODO: gseng - remove completely later
+      # stdout { codec => rubydebug }
+      elasticsearch {
+        hosts => ["http://elasticsearch-master:9200"]
+        manage_template => false
+        index => "%{[@metadata][beat]}-orbitant-%{+YYYY.MM.dd}"
+        document_type => "%{[@metadata][type]}"
+      }
+    }
