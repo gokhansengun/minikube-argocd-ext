@@ -1,0 +1,29 @@
+---
+# Source: app/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: account
+  labels:
+    app.kubernetes.io/name: account
+    app.kubernetes.io/family: dnext
+    helm.sh/chart: app-0.9.1
+    app.kubernetes.io/instance: account
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/app: account
+    pia-team.com/app-logo: spring
+    pia-team.com/app-title: Account
+    pia-team.com/family: dnext
+    slug: account
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app.kubernetes.io/name: account
+    app.kubernetes.io/instance: account

@@ -1,0 +1,45 @@
+---
+# Source: app/templates/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: account
+  labels:
+    app.kubernetes.io/name: account
+    app.kubernetes.io/family: dnext
+    helm.sh/chart: app-0.9.1
+    app.kubernetes.io/instance: account
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: account
+  minReplicas: 1
+  maxReplicas: 1
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Pods
+        value: 1
+        periodSeconds: 300
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 15
+      - type: Percent
+        value: 40
+        periodSeconds: 15
+      selectPolicy: Max

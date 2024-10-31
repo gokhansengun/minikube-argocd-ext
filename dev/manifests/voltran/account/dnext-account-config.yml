@@ -1,0 +1,10 @@
+---
+# Source: app/templates/dnext-account-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.apps/0.35.0/orbitant/account
+kind: ConfigMap
+metadata:
+  name: dnext-account-config
+  annotations:
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account

@@ -1,0 +1,29 @@
+---
+# Source: app/templates/otel-agent-props.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: account-otel-agent-props
+  annotations:
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account
+data:
+  otel-agent.properties: |-
+    otel.service.name=account
+    otel.metrics.exporter=none
+    otel.logs.exporter=none
+    otel.exporter.otlp.endpoint=http://jaeger-collector:4317
+    otel.exporter.jaeger.endpoint=http://jaeger-collector:14250
+    otel.instrumentation.hibernate.enabled=false
+    otel.instrumentation.jaxrs.enabled=false
+    otel.instrumentation.jdbc.enabled=false
+    otel.instrumentation.servlet.enabled=false
+    otel.instrumentation.tomcat.enabled=true
+    otel.instrumentation.okhttp.enabled=true
+    otel.instrumentation.com.fasterxml.jackson.enabled=true
+    otel.instrumentation.org.camunda.bpm.engine.enabled=true
+    otel.instrumentation.okhttp3.enabled.enabled=true
+    otel.instrumentation.com.pia.orbitant.orderfulfillment.authentication.enabled=true
+    otel.instrumentation.com.pia.orbitant.orderfulfillment.service.connector.enabled=true
+    otel.instrumentation.com.pia.orbitant.resourceorderfulfillment.service.connector.enabled=true
+    otel.instrumentation.com.pia.orbitant.serviceorderfulfillment.service.connector.enabled=true
+    otel.instrumentation.kafka.enabled=true

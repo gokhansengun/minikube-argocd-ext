@@ -1,0 +1,246 @@
+---
+# Source: app/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account
+  labels:
+    app.kubernetes.io/name: account
+    app.kubernetes.io/family: dnext
+    helm.sh/chart: app-0.9.1
+    app.kubernetes.io/instance: account
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: account
+      app.kubernetes.io/instance: account
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: account
+        app.kubernetes.io/family: dnext
+        app.kubernetes.io/instance: account
+        orbinant-monitoring: orbinant-prometheus-exporter
+      annotations:
+        pia-team.com/app: account
+
+
+
+        checksum/otel-agent-props: 8534e4528c0a4f6f4dffe15077a90f466d0489bebc612176af070986ce78daf5
+        checksum/secrets: ff29150be991cbea25dc1fb4fcfada8bae492d888bb02b9395eabd15d41af82d
+        checksum/spring-override-config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+    spec:
+      serviceAccountName: account
+      volumes:
+      - name: ssl-certs
+        emptyDir: {}
+      - name: custom-ca-certs
+        configMap:
+          name: custom-ca-certs
+      - name: addons
+        emptyDir: {}
+      - name: data-volume
+        emptyDir: {}
+      - name: jks-volume
+        secret:
+          secretName: jks-store
+      - name: otel-agent
+        configMap:
+          name: account-otel-agent-props
+      # TODO: gseng - can we generalize this?
+      initContainers:
+      - name: init-elastic-apm-agent
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/observability/apm-agent-java:1.42.0"
+        volumeMounts:
+        - name: addons
+          mountPath: /addons
+        command:
+        - cp
+        - /usr/agent/elastic-apm-agent.jar
+        - /addons/elastic-apm-agent.jar
+      - name: init-jaeger-agent
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/jaeger-opentelemetry-javaagent:v1.33.0"
+        volumeMounts:
+        - name: addons
+          mountPath: /addons
+        command:
+        - cp
+        - /opentelemetry-javaagent-v1.33.0.jar
+        - /addons/opentelemetry-javaagent.jar
+      containers:
+      - name: account
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/orbitant/account/account:v1.27.0-1"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: 'APPLICATION_S2S_ENABLED'
+          value: 'true'
+        - name: 'APPLICATION_S2S_TOKEN_GENERATION_AUTH_URL'
+          value: 'https://diam.orbitant.192.168.21.10.nip.io/realms/orbitant-realm/protocol/openid-connect/token'
+        - name: 'APP_BASE_URI'
+          value: 'diam.orbitant.192.168.21.10.nip.io'
+        - name: 'APP_NAME'
+          value: 'account'
+        - name: 'ELASTIC_APM_APPLICATION_PACKAGES'
+          value: 'com.pia.orbitant'
+        - name: 'ELASTIC_APM_SERVER_URL'
+          value: 'http://apm-server-apm-server:8200'
+        - name: 'ELASTIC_APM_SERVICE_NAME'
+          value: 'account'
+        - name: 'JAVA_TOOL_OPTIONS'
+          value: '-javaagent:/addons/elastic-apm-agent.jar -javaagent:/addons/opentelemetry-javaagent.jar
+            -Dotel.javaagent.configuration-file=/addons/otel-agent.properties'
+        - name: 'KEYCLOAK_FRONTEND_URL'
+          value: 'https://diam.orbitant.192.168.21.10.nip.io'
+        - name: 'KEYCLOAK_HOSTNAME'
+          value: 'diam.orbitant.192.168.21.10.nip.io'
+        - name: 'KEYCLOAK_PROXY_URL'
+          value: 'https://diam.orbitant.192.168.21.10.nip.io'
+        - name: 'SECURITY_CORS_ACCESS_CONTROL_ALLOW_HEADERS'
+          value: '*'
+        - name: 'SECURITY_CORS_ACCESS_CONTROL_ALLOW_METHODS'
+          value: '*'
+        - name: 'SECURITY_CORS_ACCESS_CONTROL_ALLOW_ORIGIN'
+          value: '*'
+        - name: 'SECURITY_CORS_ACCESS_CONTROL_EXPOSE_HEADERS'
+          value: '*'
+        - name: 'SECURITY_JWK_SET_URI'
+          value: 'https://diam.orbitant.192.168.21.10.nip.io/realms/orbitant-realm/protocol/openid-connect/certs'
+        - name: 'SPRING_DATASOURCE_DB_NAME'
+          value: 'account_management'
+        - name: 'SPRING_DATASOURCE_URL'
+          value: 'jdbc:postgresql://postgres:5432/account_management?useUnicode=yes&characterEncoding=UTF-8'
+        - name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS'
+          value: 'http://kafka:9092'
+        - name: 'SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS'
+          value: 'http://kafka:9092'
+        - name: 'SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS'
+          value: 'http://kafka:9092'
+        - name: 'SPRING_OPENTRACING_JAEGER_ENABLED'
+          value: 'true'
+        - name: 'SPRING_OPENTRACING_JAEGER_HOST'
+          value: 'jaeger-agent'
+        - name: 'SPRING_OPENTRACING_JAEGER_PORT'
+          value: '6831'
+        - name: 'SPRING_PROFILES_ACTIVE'
+          value: 'default,prod'
+        - name: 'SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI'
+          value: 'https://diam.orbitant.192.168.21.10.nip.io/realms/orbitant-realm'
+        - name: APPLICATION_S2S_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: account
+              key: APPLICATION_S2S_CLIENT_ID
+        - name: APPLICATION_S2S_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: account
+              key: APPLICATION_S2S_CLIENT_SECRET
+        - name: APPLICATION_S2S_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: account
+              key: APPLICATION_S2S_PASSWORD
+        - name: APPLICATION_S2S_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: account
+              key: APPLICATION_S2S_USERNAME
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: account
+              key: SPRING_DATASOURCE_PASSWORD
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: account
+              key: SPRING_DATASOURCE_USERNAME
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /api/accountManagement/v4/actuator/health/liveness
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 5
+        startupProbe:
+          httpGet:
+            path: /api/accountManagement/v4/actuator/health/readiness
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 20
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "30"]
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 2000Mi
+          requests:
+            cpu: 20m
+            memory: 500Mi
+        volumeMounts:
+        - name: otel-agent
+          mountPath: /addons/otel-agent.properties
+          subPath: otel-agent.properties
+        - name: custom-ca-certs
+          mountPath: /etc/ssl/certs
+          # TODO: gseng - can we generalize this?
+        - name: addons
+          mountPath: /addons
+        - name: data-volume
+          mountPath: /tmp
+            # TODO: gseng - can we generalize this?
+        - name: jks-volume
+          mountPath: /app/jks
+        - name: jks-volume
+          mountPath: /opt/java/openjdk/lib/security/cacerts
+          subPath: cacerts
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsUser: 101
+          runAsGroup: 0
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - all
+      terminationGracePeriodSeconds: 30
+      imagePullSecrets:
+      - name: reg-creds
+      hostAliases:
+      - hostnames:
+        - diam.orbitant.192.168.21.10.nip.io
+        ip: 10.111.174.148
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: account
+            release: account
+            account: replica
+  progressDeadlineSeconds: 3600
