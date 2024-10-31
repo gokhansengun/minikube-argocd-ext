@@ -1,0 +1,16 @@
+---
+# Source: kibana/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kibana-kibana-config
+  labels:
+    app: kibana
+    release: "kibana"
+    heritage: Helm
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+data:
+  kibana.yml: |
+    server.publicBaseUrl: https://kibana.orbitant.192.168.21.10.nip.io
+    security.showInsecureClusterWarning: false

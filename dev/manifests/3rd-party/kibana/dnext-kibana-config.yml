@@ -1,0 +1,10 @@
+---
+# Source: kibana/templates/dnext-kibana-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.elastic/0.5.0
+kind: ConfigMap
+metadata:
+  name: dnext-kibana-config
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0

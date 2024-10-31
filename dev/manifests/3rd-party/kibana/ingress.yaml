@@ -1,0 +1,31 @@
+---
+# Source: kibana/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kibana-kibana
+  labels:
+    app: kibana
+    release: "kibana"
+    heritage: Helm
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    pia-team.com/family: orbitant
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+spec:
+  ingressClassName: "nginx"
+  tls:
+  - hosts:
+    - kibana.orbitant.192.168.21.10.nip.io
+    secretName: kibana-tls
+  rules:
+  - host: kibana.orbitant.192.168.21.10.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kibana-kibana
+            port:
+              number: 5601

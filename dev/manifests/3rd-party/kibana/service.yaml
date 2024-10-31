@@ -1,0 +1,25 @@
+---
+# Source: kibana/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana-kibana
+  labels:
+    app: kibana
+    release: "kibana"
+    heritage: Helm
+  annotations:
+    pia-team.com/app: kibana
+    pia-team.com/app-logo: kibana
+    pia-team.com/app-title: Kibana
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5601
+    protocol: TCP
+    name: http
+    targetPort: 5601
+  selector:
+    app: kibana
+    release: "kibana"
