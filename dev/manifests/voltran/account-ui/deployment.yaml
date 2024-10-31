@@ -1,0 +1,209 @@
+---
+# Source: app/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account-ui
+  labels:
+    app.kubernetes.io/name: account-ui
+    app.kubernetes.io/family: dnext
+    helm.sh/chart: app-0.9.1
+    app.kubernetes.io/instance: account-ui
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account-ui
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: account-ui
+      app.kubernetes.io/instance: account-ui
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: account-ui
+        app.kubernetes.io/family: dnext
+        app.kubernetes.io/instance: account-ui
+        orbinant-monitoring: orbinant-prometheus-exporter
+      annotations:
+        pia-team.com/app: account-ui
+
+
+        checksum/envjs-configmap: b44f79c1a1fff7af7cfa6baf42bce7fb4afe934b0318b2b0fae4ffddb808c374
+
+
+        checksum/otel-agent-props: e6697cc8215b28c90a63ad4af05df58b988b717af1d3060ffff14eb255254b00
+        checksum/secrets: 454bbaca02b5c91b73f9ad730857326624c55aa8122b2b4033da769001b616f8
+        checksum/spring-override-config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+    spec:
+      serviceAccountName: account-ui
+      volumes:
+      - name: env-js-config
+        configMap:
+          name: account-ui-env-js-config
+      - name: entrypoint-sh-config
+        configMap:
+          name: account-ui-entrypoint-sh-config
+      - name: nginx-config
+        configMap:
+          name: account-ui-nginx-config
+      - name: ssl-certs
+        emptyDir: {}
+      - name: custom-ca-certs
+        configMap:
+          name: custom-ca-certs
+      - name: addons
+        emptyDir: {}
+      - name: data-volume
+        emptyDir: {}
+      - name: jks-volume
+        secret:
+          secretName: jks-store
+      - name: otel-agent
+        configMap:
+          name: account-ui-otel-agent-props
+      # TODO: gseng - can we generalize this?
+      initContainers:
+      containers:
+      - name: account-ui
+        image: "europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/orbitant/account-ui/account-ui:v1.11.44-2"
+        imagePullPolicy: IfNotPresent
+        command: ['bash', '/entrypoint.sh']
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: 'APPLICATION_S2S_TOKEN_GENERATION_AUTH_URL'
+          value: 'https://diam.orbitant.192.168.21.10.nip.io/realms/orbitant-realm/protocol/openid-connect/token'
+        - name: 'APP_BASE_URI'
+          value: 'diam.orbitant.192.168.21.10.nip.io'
+        - name: 'APP_NAME'
+          value: 'account-ui'
+        - name: 'JAVA_TOOL_OPTIONS'
+          value: '-javaagent:/addons/elastic-apm-agent.jar -javaagent:/addons/opentelemetry-javaagent.jar
+            -Dotel.javaagent.configuration-file=/addons/otel-agent.properties'
+        - name: 'KEYCLOAK_FRONTEND_URL'
+          value: 'https://diam.orbitant.192.168.21.10.nip.io'
+        - name: 'KEYCLOAK_HOSTNAME'
+          value: 'diam.orbitant.192.168.21.10.nip.io'
+        - name: 'KEYCLOAK_PROXY_URL'
+          value: 'https://diam.orbitant.192.168.21.10.nip.io'
+        - name: 'SECURITY_CORS_ACCESS_CONTROL_ALLOW_HEADERS'
+          value: '*'
+        - name: 'SECURITY_CORS_ACCESS_CONTROL_ALLOW_METHODS'
+          value: '*'
+        - name: 'SECURITY_CORS_ACCESS_CONTROL_ALLOW_ORIGIN'
+          value: '*'
+        - name: 'SECURITY_CORS_ACCESS_CONTROL_EXPOSE_HEADERS'
+          value: '*'
+        - name: 'SECURITY_JWK_SET_URI'
+          value: 'https://diam.orbitant.192.168.21.10.nip.io/realms/orbitant-realm/protocol/openid-connect/certs'
+        - name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS'
+          value: 'http://kafka:9092'
+        - name: 'SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS'
+          value: 'http://kafka:9092'
+        - name: 'SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS'
+          value: 'http://kafka:9092'
+        - name: 'SPRING_OPENTRACING_JAEGER_ENABLED'
+          value: 'true'
+        - name: 'SPRING_OPENTRACING_JAEGER_HOST'
+          value: 'jaeger-agent'
+        - name: 'SPRING_OPENTRACING_JAEGER_PORT'
+          value: '6831'
+        - name: 'SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI'
+          value: 'https://diam.orbitant.192.168.21.10.nip.io/realms/orbitant-realm'
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /ui/accountManagement
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 5
+        startupProbe:
+          httpGet:
+            path: /ui/accountManagement
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 20
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "30"]
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 100Mi
+          requests:
+            cpu: 5m
+            memory: 50Mi
+        volumeMounts:
+        - name: env-js-config
+          mountPath: /usr/share/nginx/html/assets/js/env-params.js
+          subPath: env-params.js
+            # TODO: gseng - remove this once all UI apps adapt to new env-params.js scheme
+        - name: env-js-config
+          mountPath: /usr/share/nginx/html/assets/js/env.js
+          subPath: env.js
+        - name: entrypoint-sh-config
+          mountPath: /entrypoint.sh
+          subPath: entrypoint.sh
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: otel-agent
+          mountPath: /addons/otel-agent.properties
+          subPath: otel-agent.properties
+        - name: custom-ca-certs
+          mountPath: /etc/ssl/certs
+          # TODO: gseng - can we generalize this?
+        - name: addons
+          mountPath: /addons
+        - name: data-volume
+          mountPath: /tmp
+            # TODO: gseng - can we generalize this?
+        - name: jks-volume
+          mountPath: /app/jks
+        - name: jks-volume
+          mountPath: /opt/java/openjdk/lib/security/cacerts
+          subPath: cacerts
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsUser: 101
+          runAsGroup: 0
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - all
+      terminationGracePeriodSeconds: 30
+      imagePullSecrets:
+      - name: reg-creds
+      hostAliases:
+      - hostnames:
+        - diam.orbitant.192.168.21.10.nip.io
+        ip: 10.111.174.148
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: account-ui
+            release: account-ui
+            account-ui: replica
+  progressDeadlineSeconds: 3600

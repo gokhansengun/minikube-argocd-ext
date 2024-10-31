@@ -1,0 +1,36 @@
+---
+# Source: app/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: account-ui
+  labels:
+    app.kubernetes.io/name: account-ui
+    app.kubernetes.io/family: dnext
+    helm.sh/chart: app-0.9.1
+    app.kubernetes.io/instance: account-ui
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/app: account-ui
+    pia-team.com/dashboard: "true"
+    pia-team.com/dashboard-scheme: https
+    pia-team.com/dashboard-url: dacm-ui.orbitant.192.168.21.10.nip.io/ui/accountManagement
+    pia-team.com/family: orbitant
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account-ui
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - "dacm-ui.orbitant.192.168.21.10.nip.io"
+    secretName: wildcard-tls
+  rules:
+  - host: "dacm-ui.orbitant.192.168.21.10.nip.io"
+    http:
+      paths:
+      - backend:
+          service:
+            name: account-ui
+            port:
+              number: 80
+        path: /ui/accountManagement
+        pathType: Prefix

@@ -1,0 +1,159 @@
+---
+# Source: app/templates/envjs-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: account-ui-env-js-config
+  annotations:
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account-ui
+data:
+  # TODO: gseng - remove this once all UI apps adapt to new env-params.js scheme
+  env.js: |
+    (function (window) {
+    window.__env = window.__env || {};
+
+    // API url
+    window.__env = {
+        platformName: 'Dnext Platform',
+        platformInfo: 'info@pia-team.com',
+        moduleInformation: false,
+
+        logos: {
+            brandLogo: 'assets/logo/logo.png',
+            userAvatar: 'assets/logo/logo.png'
+        },
+
+        baseURI: 'https://dacm-api.orbitant.192.168.21.10.nip.io/',
+        accountManagementApi: 'https://dacm-api.orbitant.192.168.21.10.nip.io/api/accountManagement/v4',
+        customerManagementApi: 'https://dcm-api.orbitant.192.168.21.10.nip.io/api/customerManagement/v4',
+        partyManagementApi: 'https://dpam-api.orbitant.192.168.21.10.nip.io/api/partyManagement/v4',
+        geographicalAddressManagementApi: 'https://dgeo-api.orbitant.192.168.21.10.nip.io/api/geographicAddressManagement/v4',
+
+        partyRoleManagementApi: 'https://dpr-api.orbitant.192.168.21.10.nip.io/api/partyRoleManagement/v4',
+
+        configuredValueEnabled: false,
+        configuredValueApi: 'https://dcfm-api.orbitant.192.168.21.10.nip.io/configurationManagement/v2/api/',
+
+        authRequired: true,
+        authType: 'keycloak', // keycloak, wso2
+
+        wso2: {
+            clientId: 'Oh7egmno6pUNuslXuTwR0FB6fz0a',
+            responseType: 'code',
+            issuer: 'https://localhost:9443/oauth2/token',
+            redirectUri: window.location.origin + window.location.pathname.replace(/\/$/, ''),
+            scope: 'openid',
+            strictDiscoveryDocumentValidation: false
+        },
+
+        keycloak: {
+            scope: 'openid',
+            responseType: 'code',
+            issuer: 'https://diam.orbitant.192.168.21.10.nip.io/realms/orbitant-realm',
+            redirectUri: window.location.origin + window.location.pathname.replace(/\/$/, ''),
+            strictDiscoveryDocumentValidation: false,
+            clientId: 'orbitant-ui-client'
+        }
+    }
+
+    // Whether or not to enable debug mode
+    // Setting this to false will disable console output
+    window.__env.enableDebug = true;
+    })(this);
+  env-params.js: |
+    (function (window) {
+    window.__env_params = window.__env_params || {};
+
+    window.__env_params = {
+        domain_name_suffix: "orbitant.192.168.21.10.nip.io",
+        domain_name_prefix_mode: "variable",
+
+        authRequired: true,
+        authType: 'keycloak', // keycloak, wso2
+
+        wso2: {
+            dummyClientSecret: "dummyClientSecret",
+            scope: 'openid',
+            responseType: 'code',
+            issuer: 'https://localhost:9443/oauth2/token',
+            redirectUri: window.location.origin + window.location.pathname.replace(/\/$/, ''),
+            strictDiscoveryDocumentValidation: false,
+            clientId: 'Oh7egmno6pUNuslXuTwR0FB6fz0a'
+        },
+
+        keycloak: {
+            dummyClientSecret: "dummyClientSecret",
+            scope: 'openid',
+            responseType: 'code',
+            issuer: 'https://diam.orbitant.192.168.21.10.nip.io/realms/orbitant-realm',
+            redirectUri: window.location.origin + window.location.pathname.replace(/\/$/, ''),
+            strictDiscoveryDocumentValidation: false,
+            clientId: 'orbitant-ui-client'
+        }
+    }
+
+    // Whether or not to enable debug mode
+    // Setting this to false will disable console output
+    window.__env.enableDebug = true;
+    }(this));
+---
+# Source: app/templates/envjs-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: account-ui-entrypoint-sh-config
+  annotations:
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account-ui
+data:
+  entrypoint.sh: |
+    #!/bin/bash -e
+
+    exec nginx -g "daemon off;"
+---
+# Source: app/templates/envjs-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: account-ui-nginx-config
+  annotations:
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account-ui
+data:
+  nginx.conf: |
+    user  nginx;
+    worker_processes  1;
+
+    error_log  /var/log/nginx/error.log notice;
+    pid        /tmp/nginx.pid;
+
+
+    events {
+        worker_connections  1024;
+    }
+
+
+    http {
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+
+        log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                          '$status $body_bytes_sent "$http_referer" '
+                          '"$http_user_agent" "$http_x_forwarded_for"';
+
+        access_log  /var/log/nginx/access.log  main;
+
+        sendfile        on;
+        #tcp_nopush     on;
+
+        keepalive_timeout  65;
+
+        #gzip  on;
+
+        include /etc/nginx/conf.d/*.conf;
+
+        # NOTE: gseng - required for running container non-root
+        client_body_temp_path /tmp/client_temp;
+        proxy_temp_path       /tmp/proxy_temp_path;
+        fastcgi_temp_path     /tmp/fastcgi_temp;
+        uwsgi_temp_path       /tmp/uwsgi_temp;
+        scgi_temp_path        /tmp/scgi_temp;
+    }

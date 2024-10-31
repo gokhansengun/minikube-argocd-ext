@@ -1,0 +1,50 @@
+---
+# Source: app/templates/network-policy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: account-ui-ingress
+  annotations:
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account-ui
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: account-ui
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 10.244.0.0/16
+    ports:
+    - port: 8080
+      protocol: TCP
+---
+# Source: app/templates/network-policy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: account-ui-egress
+  annotations:
+    pia-team.com/role: pia.k8s.apps/0.35.0/orbitant/account-ui
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: account-ui
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 10.244.0.0/16
+    ports:
+    - port: 53
+      protocol: UDP
+    - port: 8080
+      protocol: TCP
+    - port: 8443
+      protocol: TCP
+    - port: 9092
+      protocol: TCP
+    - port: 4317
+      protocol: TCP
