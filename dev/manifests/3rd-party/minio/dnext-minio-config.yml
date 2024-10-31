@@ -1,0 +1,10 @@
+---
+# Source: minio/templates/dnext-minio-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.minio/0.6.0
+kind: ConfigMap
+metadata:
+  name: dnext-minio-config
+  annotations:
+    pia-team.com/role: pia.k8s.minio/0.6.0

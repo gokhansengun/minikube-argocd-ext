@@ -1,0 +1,31 @@
+---
+# Source: minio/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio
+  namespace: "hornet"
+  labels:
+    app.kubernetes.io/name: minio
+    helm.sh/chart: minio-11.10.3
+    app.kubernetes.io/instance: minio
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/family: orbitant
+    pia-team.com/app: minio
+    pia-team.com/app-logo: minio
+    pia-team.com/app-title: MinIO
+    pia-team.com/role: pia.k8s.minio/0.6.0
+spec:
+  ingressClassName: "nginx"
+  rules:
+  - host: minio.orbitant.192.168.21.10.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: minio
+            port:
+              name: minio-console

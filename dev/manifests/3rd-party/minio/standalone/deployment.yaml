@@ -1,0 +1,130 @@
+---
+# Source: minio/templates/standalone/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: "hornet"
+  labels:
+    app.kubernetes.io/name: minio
+    helm.sh/chart: minio-11.10.3
+    app.kubernetes.io/instance: minio
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/app: minio
+    pia-team.com/app-logo: minio
+    pia-team.com/app-title: MinIO
+    pia-team.com/role: pia.k8s.minio/0.6.0
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: minio
+      app.kubernetes.io/instance: minio
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: minio
+        helm.sh/chart: minio-11.10.3
+        app.kubernetes.io/instance: minio
+        app.kubernetes.io/managed-by: Helm
+      annotations:
+        checksum/credentials-secret: 31440c05a1668ff8f8afacc72b77b919860832c1407afcfa6a2d0fa88008ea86
+        pia-team.com/app: minio
+        pia-team.com/app-logo: minio
+        pia-team.com/app-title: MinIO
+    spec:
+      imagePullSecrets:
+      - name: reg-creds
+      serviceAccountName: minio
+      affinity:
+        podAffinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: minio
+                  app.kubernetes.io/instance: minio
+              namespaces:
+              - "hornet"
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+        nodeAffinity:
+      securityContext:
+        fsGroup: 1001
+      containers:
+      - name: minio
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/bitnami/minio:2022.9.7-debian-11-r4
+        imagePullPolicy: "IfNotPresent"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+        env:
+        - name: BITNAMI_DEBUG
+          value: "false"
+        - name: MINIO_SCHEME
+          value: "http"
+        - name: MINIO_FORCE_NEW_KEYS
+          value: "no"
+        - name: MINIO_ROOT_USER
+          valueFrom:
+            secretKeyRef:
+              name: minio
+              key: root-user
+        - name: MINIO_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: minio
+              key: root-password
+        - name: MINIO_DEFAULT_BUCKETS
+          value: pia-documents-piadev,attachment,document,test
+        - name: MINIO_BROWSER
+          value: "on"
+        - name: MINIO_PROMETHEUS_AUTH_TYPE
+          value: "public"
+        - name: MINIO_CONSOLE_PORT_NUMBER
+          value: "9001"
+        envFrom:
+        ports:
+        - name: minio-api
+          containerPort: 9000
+          protocol: TCP
+        - name: minio-console
+          containerPort: 9001
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            port: minio-api
+            scheme: "HTTP"
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        readinessProbe:
+          tcpSocket:
+            port: minio-api
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 5
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 2000Mi
+          requests:
+            cpu: 20m
+            memory: 200Mi
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: minio
+  progressDeadlineSeconds: 3600
