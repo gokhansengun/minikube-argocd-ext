@@ -1,0 +1,27 @@
+---
+# Source: keycloak/templates/networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: keycloak
+  namespace: "hornet"
+  labels:
+    app.kubernetes.io/name: keycloak
+    helm.sh/chart: keycloak-15.1.3
+    app.kubernetes.io/instance: keycloak
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: keycloak
+  annotations:
+    pia-team.com/app: keycloak
+    pia-team.com/app-logo: keycloak
+    pia-team.com/app-title: Keycloak
+    pia-team.com/role: pia.k8s.keycloak/0.9.1
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak
+      app.kubernetes.io/instance: keycloak
+  ingress:
+  - ports:
+    - port: 7800
+    - port: 8080

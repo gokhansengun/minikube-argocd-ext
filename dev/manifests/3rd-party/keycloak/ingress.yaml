@@ -1,0 +1,32 @@
+---
+# Source: keycloak/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak
+  namespace: "hornet"
+  labels:
+    app.kubernetes.io/name: keycloak
+    helm.sh/chart: keycloak-15.1.3
+    app.kubernetes.io/instance: keycloak
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: keycloak
+  annotations:
+    pia-team.com/app: keycloak
+    pia-team.com/app-logo: keycloak
+    pia-team.com/app-title: Keycloak
+    pia-team.com/family: orbitant
+    pia-team.com/role: pia.k8s.keycloak/0.9.1
+spec:
+  ingressClassName: "nginx"
+  rules:
+  - host: "diam.orbitant.192.168.21.10.nip.io"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: keycloak
+            port:
+              name: http

@@ -1,0 +1,10 @@
+---
+# Source: keycloak/templates/dnext-keycloak-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.keycloak/0.9.1
+kind: ConfigMap
+metadata:
+  name: dnext-keycloak-config
+  annotations:
+    pia-team.com/role: pia.k8s.keycloak/0.9.1
