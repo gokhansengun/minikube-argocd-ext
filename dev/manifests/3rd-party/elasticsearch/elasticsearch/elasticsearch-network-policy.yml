@@ -1,0 +1,21 @@
+---
+# Source: xxxxx/templates/elasticsearch/elasticsearch-network-policy.yml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: elasticsearch-ingress
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+spec:
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 10.244.0.0/16
+    ports:
+    - port: 9200
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app: elasticsearch-master
+  policyTypes:
+  - Ingress

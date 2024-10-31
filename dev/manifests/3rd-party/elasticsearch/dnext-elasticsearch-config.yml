@@ -1,0 +1,10 @@
+---
+# Source: elasticsearch/templates/dnext-elasticsearch-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.elastic/0.5.0
+kind: ConfigMap
+metadata:
+  name: dnext-elasticsearch-config
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0

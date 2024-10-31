@@ -1,0 +1,19 @@
+---
+# Source: xxxxx/templates/elasticsearch/elasticsearch-extra-svc.yml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: elasticsearch-master
+  name: elasticsearch
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+spec:
+  ports:
+  - name: http
+    port: 9200
+    protocol: TCP
+    targetPort: 9200
+  selector:
+    app: elasticsearch-master
+  type: ClusterIP

@@ -1,0 +1,16 @@
+---
+# Source: elasticsearch/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch-master-config
+  labels:
+    heritage: "Helm"
+    release: "elasticsearch"
+    chart: "elasticsearch"
+    app: "elasticsearch-master"
+  annotations:
+    pia-team.com/role: pia.k8s.elastic/0.5.0
+data:
+  elasticsearch.yml: |
+    cluster.max_shards_per_node: 1000
