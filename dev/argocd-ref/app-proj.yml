@@ -1,0 +1,21 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: voltran
+  namespace: argocd
+spec:
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  destinations:
+  - namespace: 'argocd'
+    server: '*'
+  - namespace: 'hornet'
+    server: '*'
+  - namespace: 'kube-system' # required by prometheus-stack install with argocd
+    server: '*'
+  sourceRepos:
+  - '*'
+  sourceNamespaces:
+  - 'argocd'

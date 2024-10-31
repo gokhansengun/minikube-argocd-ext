@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: voltran
+  syncPolicy:
+    automated:
+      prune: true
+      allowEmpty: true
+      selfHeal: true
+  destination:
+    namespace: argocd
+    name: in-cluster
+  source:
+    directory:
+      recurse: true
+    repoURL: https://github.com/gokhansengun/minikube-argocd-ext
+    targetRevision: main
+    path: "dev/apps"

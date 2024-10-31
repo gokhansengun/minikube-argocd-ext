@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dbpm-form-management
+  namespace: argocd
+spec:
+  project: voltran
+  syncPolicy:
+    automated:
+      prune: true
+      allowEmpty: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  source:
+    repoURL: https://github.com/gokhansengun/minikube-argocd-ext
+    targetRevision: main
+    path: dev/manifests/voltran/dbpm-form-management
+    directory:
+      recurse: true
+  destination:
+    server: https://192.168.21.10:8443 
+    namespace: hornet
