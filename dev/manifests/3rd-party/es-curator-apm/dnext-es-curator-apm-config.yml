@@ -1,0 +1,10 @@
+---
+# Source: es-curator/templates/dnext-es-curator-apm-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.elastic.curator/0.2.1
+kind: ConfigMap
+metadata:
+  name: dnext-es-curator-apm-config
+  annotations:
+    pia-team.com/role: pia.k8s.elastic.curator/0.2.1

@@ -1,0 +1,48 @@
+---
+# Source: es-curator/templates/cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: es-curator-apm
+  labels:
+    app.kubernetes.io/name: es-curator
+    helm.sh/chart: es-curator-0.2.0
+    app.kubernetes.io/instance: es-curator-apm
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/role: pia.k8s.elastic.curator/0.2.1
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  schedule: '0 */8 * * *'
+  jobTemplate:
+    metadata:
+      labels:
+        es-curator: es-curator-apm
+    spec:
+      template:
+        spec:
+          imagePullSecrets:
+          - name: reg-creds
+          containers:
+          - name: es-curator
+            image: "ghcr.io/dnext-technology/3rd-party/es-curator:5.8.1-debian-10-r122"
+            imagePullPolicy: IfNotPresent
+            args:
+            - '--config'
+            - '/etc/es-curator/curator.yml'
+            - '/etc/es-curator/delete-log-files-curator.yml'
+            env:
+            - name: APP
+              value: 'Elasticsearch Curator'
+            volumeMounts:
+            - name: es-curator-config
+              mountPath: /etc/es-curator
+            resources: {}
+          restartPolicy: OnFailure
+          volumes:
+          - name: es-curator-config
+            configMap:
+              name: es-curator-apm-config
