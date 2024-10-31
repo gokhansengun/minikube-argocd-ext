@@ -1,0 +1,78 @@
+---
+# Source: es-curator/templates/config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: es-curator-filebeat-orbitant-config
+  namespace: hornet
+  annotations:
+    pia-team.com/role: pia.k8s.elastic.curator/0.2.1
+data:
+  curator.yml: |
+    ---
+    # Remember, leave a key empty if there is no value. None will be a string,
+    # not a Python "NoneType"
+    client:
+      hosts:
+        - elasticsearch-master
+      port: 9200
+      url_prefix:
+      use_ssl: False
+      certificate:
+      client_cert:
+      client_key:
+      aws_key:
+      aws_secret_key:
+      aws_region:
+      ssl_no_validate: False
+      http_auth:
+      timeout: 30
+      master_only: False
+
+    logging:
+      loglevel: DEBUG
+      logfile:
+      logformat: default
+
+  delete-log-files-curator.yml: |
+    ---
+    actions:
+      1:
+        action: delete_indices
+        description: >-
+          Delete indices matching the prefix filebeat-orbitant in excess of 
+          2GB of data, starting with the oldest indices, based on index creation_date.
+        options:
+          ignore_empty_list: True
+          timeout_override: 300
+          continue_if_exception: False
+          disable_action: False
+        filters:
+        - filtertype: pattern
+          kind: prefix
+          value: filebeat-orbitant
+        - filtertype: space
+          disk_space: 2
+          use_age: True
+          source: creation_date
+      2:
+        action: delete_indices
+        description: >-
+          Delete indices. Find which to delete by first limiting the list to logstash-
+          prefixed indices. Then further filter those to prevent deletion of anything
+          less than 7 days old. Ignore the error if the filter does not result in an
+          actionable list of indices (ignore_empty_list) and exit cleanly.
+        options:
+          ignore_empty_list: True
+          timeout_override: 300
+          continue_if_exception: False
+          disable_action: False
+        filters:
+        - filtertype: pattern
+          kind: prefix
+          value: filebeat-orbitant
+        - filtertype: age
+          source: creation_date
+          direction: older
+          unit: days
+          unit_count: 7

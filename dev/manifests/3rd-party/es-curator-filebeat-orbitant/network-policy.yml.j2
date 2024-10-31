@@ -1,0 +1,23 @@
+---
+# Source: es-curator/templates/network-policy.yml.j2
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: es-curator-filebeat-orbitant-egress
+  annotations:
+    pia-team.com/role: pia.k8s.elastic.curator/0.2.1
+spec:
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 10.244.0.0/16
+    ports:
+    - port: 53
+      protocol: UDP
+    - port: 9200
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      es-curator: es-curator-filebeat-orbitant
+  policyTypes:
+  - Egress
