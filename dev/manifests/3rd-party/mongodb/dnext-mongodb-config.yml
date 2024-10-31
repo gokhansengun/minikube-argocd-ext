@@ -1,0 +1,10 @@
+---
+# Source: mongodb/templates/dnext-mongodb-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.mongodb/0.5.3
+kind: ConfigMap
+metadata:
+  name: dnext-mongodb-config
+  annotations:
+    pia-team.com/role: pia.k8s.mongodb/0.5.3

@@ -1,0 +1,30 @@
+---
+# Source: mongodb/templates/replicaset/headless-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-headless
+  namespace: hornet
+  labels:
+    app.kubernetes.io/name: mongodb
+    helm.sh/chart: mongodb-11.0.6-1
+    app.kubernetes.io/instance: mongodb
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: mongodb
+  annotations:
+    pia-team.com/app: mongodb
+    pia-team.com/app-logo: mongodb
+    pia-team.com/app-title: MongoDB
+    pia-team.com/role: pia.k8s.mongodb/0.5.3
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - name: mongodb
+    port: 27017
+    targetPort: mongodb
+  selector:
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/instance: mongodb
+    app.kubernetes.io/component: mongodb
