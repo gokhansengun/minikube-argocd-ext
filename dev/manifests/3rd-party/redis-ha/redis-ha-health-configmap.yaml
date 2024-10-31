@@ -1,0 +1,51 @@
+---
+# Source: redis-ha/templates/redis-ha-health-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-ha-health-configmap
+  namespace: "hornet"
+  labels:
+    heritage: Helm
+    release: redis-ha
+    chart: redis-ha-4.23.0
+    app: redis-ha
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1
+data:
+  redis_liveness.sh: |
+    response=$(
+      redis-cli \
+        -h localhost \
+        -p 6379 \
+        ping
+    )
+    if [ "$response" != "PONG" ] && [ "${response:0:7}" != "LOADING" ] ; then
+      echo "$response"
+      exit 1
+    fi
+    echo "response=$response"
+  redis_readiness.sh: |
+    response=$(
+      redis-cli \
+        -h localhost \
+        -p 6379 \
+        ping
+    )
+    if [ "$response" != "PONG" ] ; then
+      echo "$response"
+      exit 1
+    fi
+    echo "response=$response"
+  sentinel_liveness.sh: |
+    response=$(
+      redis-cli \
+        -h localhost \
+        -p 26379 \
+        ping
+    )
+    if [ "$response" != "PONG" ]; then
+      echo "$response"
+      exit 1
+    fi
+    echo "response=$response"

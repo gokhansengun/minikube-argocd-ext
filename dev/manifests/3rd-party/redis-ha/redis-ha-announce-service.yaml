@@ -1,0 +1,90 @@
+---
+# Source: redis-ha/templates/redis-ha-announce-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-ha-announce-0
+  namespace: "hornet"
+  labels:
+    app: redis-ha
+    heritage: "Helm"
+    release: "redis-ha"
+    chart: redis-ha-4.23.0
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1
+spec:
+  publishNotReadyAddresses: true
+  type: ClusterIP
+  ports:
+  - name: tcp-server
+    port: 6379
+    protocol: TCP
+    targetPort: redis
+  - name: tcp-sentinel
+    port: 26379
+    protocol: TCP
+    targetPort: sentinel
+  selector:
+    release: redis-ha
+    app: redis-ha
+    "statefulset.kubernetes.io/pod-name": redis-ha-server-0
+---
+# Source: redis-ha/templates/redis-ha-announce-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-ha-announce-1
+  namespace: "hornet"
+  labels:
+    app: redis-ha
+    heritage: "Helm"
+    release: "redis-ha"
+    chart: redis-ha-4.23.0
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1
+spec:
+  publishNotReadyAddresses: true
+  type: ClusterIP
+  ports:
+  - name: tcp-server
+    port: 6379
+    protocol: TCP
+    targetPort: redis
+  - name: tcp-sentinel
+    port: 26379
+    protocol: TCP
+    targetPort: sentinel
+  selector:
+    release: redis-ha
+    app: redis-ha
+    "statefulset.kubernetes.io/pod-name": redis-ha-server-1
+---
+# Source: redis-ha/templates/redis-ha-announce-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-ha-announce-2
+  namespace: "hornet"
+  labels:
+    app: redis-ha
+    heritage: "Helm"
+    release: "redis-ha"
+    chart: redis-ha-4.23.0
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1
+spec:
+  publishNotReadyAddresses: true
+  type: ClusterIP
+  ports:
+  - name: tcp-server
+    port: 6379
+    protocol: TCP
+    targetPort: redis
+  - name: tcp-sentinel
+    port: 26379
+    protocol: TCP
+    targetPort: sentinel
+  selector:
+    release: redis-ha
+    app: redis-ha
+    "statefulset.kubernetes.io/pod-name": redis-ha-server-2

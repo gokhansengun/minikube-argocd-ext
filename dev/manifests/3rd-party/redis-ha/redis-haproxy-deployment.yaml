@@ -1,0 +1,120 @@
+---
+# Source: redis-ha/templates/redis-haproxy-deployment.yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: redis-ha-haproxy
+  namespace: "hornet"
+  labels:
+    app: redis-ha
+    heritage: "Helm"
+    release: "redis-ha"
+    chart: redis-ha-4.23.0
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1
+spec:
+  strategy:
+    type: RollingUpdate
+  revisionHistoryLimit: 1
+  replicas: 3
+  selector:
+    matchLabels:
+      app: redis-ha-haproxy
+      release: redis-ha
+  template:
+    metadata:
+      name: redis-ha-haproxy
+      labels:
+        app: redis-ha-haproxy
+        release: redis-ha
+      annotations:
+        checksum/config: 88a8b836178d93602d35993819091b60b041051d408e4784781cdd34df656279
+    spec:
+      # Needed when using unmodified rbac-setup.yml
+      serviceAccountName: redis-ha-haproxy
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      nodeSelector: {}
+      tolerations:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: redis-ha-haproxy
+                  release: redis-ha
+              topologyKey: kubernetes.io/hostname
+      initContainers:
+      - name: config-init
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/library/haproxy:2.6.9
+        imagePullPolicy: IfNotPresent
+        resources: {}
+        command:
+        - sh
+        args:
+        - /readonly/haproxy_init.sh
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: config-volume
+          mountPath: /readonly
+          readOnly: true
+        - name: data
+          mountPath: /data
+      imagePullSecrets:
+      - name: reg-creds
+      containers:
+      - name: haproxy
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/library/haproxy:2.6.9
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8888
+          initialDelaySeconds: 5
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8888
+          initialDelaySeconds: 5
+          periodSeconds: 3
+        ports:
+        - name: redis
+          containerPort: 6379
+        resources: {}
+        volumeMounts:
+        - name: data
+          mountPath: /usr/local/etc/haproxy
+        - name: shared-socket
+          mountPath: /run/haproxy
+        lifecycle: {}
+      volumes:
+      - name: config-volume
+        configMap:
+          name: redis-ha-configmap
+      - name: shared-socket
+        emptyDir: {}
+      - name: data
+        emptyDir: {}
+  progressDeadlineSeconds: 3600

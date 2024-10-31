@@ -1,0 +1,21 @@
+---
+# Source: redis-ha/templates/redis-ha-rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: redis-ha
+  namespace: "hornet"
+  labels:
+    app: redis-ha
+    heritage: "Helm"
+    release: "redis-ha"
+    chart: redis-ha-4.23.0
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1
+subjects:
+- kind: ServiceAccount
+  name: redis-ha
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: redis-ha

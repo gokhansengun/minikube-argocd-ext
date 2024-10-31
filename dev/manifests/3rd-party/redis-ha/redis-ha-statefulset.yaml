@@ -1,0 +1,243 @@
+---
+# Source: redis-ha/templates/redis-ha-statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-ha-server
+  namespace: "hornet"
+  labels:
+    redis-ha: replica
+    app: redis-ha
+    heritage: "Helm"
+    release: "redis-ha"
+    chart: redis-ha-4.23.0
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1
+spec:
+  selector:
+    matchLabels:
+      release: redis-ha
+      app: redis-ha
+  serviceName: redis-ha
+  replicas: 3
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/init-config: 35ae75bd8aae61eae2d6cac05f36613152ce1fe83378683728e8486e1cd3a7d0
+      labels:
+        release: redis-ha
+        app: redis-ha
+        redis-ha: replica
+    spec:
+      terminationGracePeriodSeconds: 60
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: redis-ha
+                  release: redis-ha
+                  redis-ha: replica
+              topologyKey: kubernetes.io/hostname
+      imagePullSecrets:
+      - name: reg-creds
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      serviceAccountName: redis-ha
+      automountServiceAccountToken: false
+      initContainers:
+      - name: config-init
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/library/redis:7.2.2
+        imagePullPolicy: IfNotPresent
+        resources: {}
+        command:
+        - sh
+        args:
+        - /readonly-config/init.sh
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        env:
+        - name: SENTINEL_ID_0
+          value: a0ddf4367a72f8e768e2546287bf0b303985c19f
+        - name: SENTINEL_ID_1
+          value: bc16ddc9a19ce8f3ff5ec8f31a2d6b94436af8a3
+        - name: SENTINEL_ID_2
+          value: ce2a8c84e9e96e3cf079fafb2ad20bcde4a7b533
+        volumeMounts:
+        - name: config
+          mountPath: /readonly-config
+          readOnly: true
+        - name: data
+          mountPath: /data
+
+
+      containers:
+      - name: redis
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/library/redis:7.2.2
+        imagePullPolicy: IfNotPresent
+        command:
+        - redis-server
+        args:
+        - /data/conf/redis.conf
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        livenessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 15
+          successThreshold: 1
+          failureThreshold: 5
+          exec:
+            command:
+            - sh
+            - -c
+            - /health/redis_liveness.sh
+        readinessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 15
+          successThreshold: 1
+          failureThreshold: 5
+          exec:
+            command:
+            - sh
+            - -c
+            - /health/redis_readiness.sh
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 2000Mi
+          requests:
+            cpu: 400m
+            memory: 1000Mi
+        ports:
+        - name: redis
+          containerPort: 6379
+        volumeMounts:
+        - name: config
+          mountPath: /readonly-config
+          readOnly: true
+        - mountPath: /data
+          name: data
+        - mountPath: /health
+          name: health
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - /readonly-config/trigger-failover-if-master.sh
+      - name: sentinel
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/library/redis:7.2.2
+        imagePullPolicy: IfNotPresent
+        command:
+        - redis-sentinel
+        args:
+        - /data/conf/sentinel.conf
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        livenessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 15
+          successThreshold: 1
+          failureThreshold: 5
+          exec:
+            command:
+            - sh
+            - -c
+            - /health/sentinel_liveness.sh
+        readinessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 15
+          successThreshold: 3
+          failureThreshold: 5
+          exec:
+            command:
+            - sh
+            - -c
+            - /health/sentinel_liveness.sh
+        resources: {}
+        ports:
+        - name: sentinel
+          containerPort: 26379
+        volumeMounts:
+        - mountPath: /data
+          name: data
+        - mountPath: /health
+          name: health
+        lifecycle: {}
+
+      - name: split-brain-fix
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/library/redis:7.2.2
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        args:
+        - /readonly-config/fix-split-brain.sh
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        env:
+        - name: SENTINEL_ID_0
+          value: a0ddf4367a72f8e768e2546287bf0b303985c19f
+        - name: SENTINEL_ID_1
+          value: bc16ddc9a19ce8f3ff5ec8f31a2d6b94436af8a3
+        - name: SENTINEL_ID_2
+          value: ce2a8c84e9e96e3cf079fafb2ad20bcde4a7b533
+        resources: {}
+        volumeMounts:
+        - name: config
+          mountPath: /readonly-config
+          readOnly: true
+        - mountPath: /data
+          name: data
+      volumes:
+      - name: config
+        configMap:
+          name: redis-ha-configmap
+      - name: health
+        configMap:
+          name: redis-ha-health-configmap
+          defaultMode: 0755
+      - name: data
+        emptyDir: {}

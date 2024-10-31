@@ -1,0 +1,61 @@
+---
+# Source: redis-ha/templates/redis-ha-network-policy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: redis-ha-network-policy
+  namespace: "hornet"
+  labels:
+    app: redis-ha
+    heritage: "Helm"
+    release: "redis-ha"
+    chart: redis-ha-4.23.0
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1
+spec:
+  podSelector:
+    matchLabels:
+      release: redis-ha
+      app: redis-ha
+  policyTypes:
+  - Ingress
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          release: redis-ha
+          app: redis-ha
+    ports:
+    - port: 6379
+      protocol: TCP
+    - port: 26379
+      protocol: TCP
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          release: redis-ha
+          app: redis-ha
+    ports:
+    - port: 6379
+      protocol: TCP
+    - port: 26379
+      protocol: TCP
+  - from:
+    - podSelector:
+        matchLabels:
+          release: redis-ha
+          app: redis-ha-haproxy
+    ports:
+    - port: 6379
+      protocol: TCP
+    - port: 26379
+      protocol: TCP

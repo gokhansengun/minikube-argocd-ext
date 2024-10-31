@@ -1,0 +1,10 @@
+---
+# Source: redis-ha/templates/dnext-redis-ha-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.redis-ha/0.4.1
+kind: ConfigMap
+metadata:
+  name: dnext-redis-ha-config
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1

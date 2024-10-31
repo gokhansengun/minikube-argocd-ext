@@ -1,0 +1,29 @@
+---
+# Source: redis-ha/templates/redis-ha-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-ha
+  namespace: "hornet"
+  labels:
+    app: redis-ha
+    heritage: "Helm"
+    release: "redis-ha"
+    chart: redis-ha-4.23.0
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: tcp-server
+    port: 6379
+    protocol: TCP
+    targetPort: redis
+  - name: tcp-sentinel
+    port: 26379
+    protocol: TCP
+    targetPort: sentinel
+  selector:
+    release: redis-ha
+    app: redis-ha

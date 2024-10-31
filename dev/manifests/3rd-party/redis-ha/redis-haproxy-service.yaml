@@ -1,0 +1,25 @@
+---
+# Source: redis-ha/templates/redis-haproxy-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-ha-haproxy
+  namespace: "hornet"
+  labels:
+    app: redis-ha
+    heritage: "Helm"
+    release: "redis-ha"
+    chart: redis-ha-4.23.0
+    component: redis-ha-haproxy
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1
+spec:
+  type: ClusterIP
+  ports:
+  - name: tcp-haproxy
+    port: 6379
+    protocol: TCP
+    targetPort: redis
+  selector:
+    release: redis-ha
+    app: redis-ha-haproxy

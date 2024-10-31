@@ -1,0 +1,22 @@
+---
+# Source: redis-ha/templates/redis-haproxy-rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: redis-ha-haproxy
+  namespace: "hornet"
+  labels:
+    app: redis-ha
+    heritage: "Helm"
+    release: "redis-ha"
+    chart: redis-ha-4.23.0
+    component: redis-ha-haproxy
+  annotations:
+    pia-team.com/role: pia.k8s.redis-ha/0.4.1
+subjects:
+- kind: ServiceAccount
+  name: redis-ha-haproxy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: redis-ha-haproxy
