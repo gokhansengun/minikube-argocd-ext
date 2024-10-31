@@ -1,0 +1,21 @@
+---
+# Source: postgresql/templates/primary/extended-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-postgresql-extended-configuration
+  namespace: "hornet"
+  labels:
+    app.kubernetes.io/name: postgresql
+    helm.sh/chart: postgresql-12.5.8
+    app.kubernetes.io/instance: postgres
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: primary
+  annotations:
+    pia-team.com/app: postgres
+    pia-team.com/app-logo: postgres
+    pia-team.com/app-title: Postgres
+    pia-team.com/role: pia.k8s.postgres/0.5.1
+data:
+  override.conf: |-
+    max_connections = 1000

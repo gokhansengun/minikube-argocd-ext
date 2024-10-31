@@ -1,0 +1,10 @@
+---
+# Source: postgresql/templates/dnext-postgres-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.postgres/0.5.1
+kind: ConfigMap
+metadata:
+  name: dnext-postgres-config
+  annotations:
+    pia-team.com/role: pia.k8s.postgres/0.5.1

@@ -1,0 +1,32 @@
+---
+# Source: postgresql/templates/networkpolicy-egress.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-postgresql-egress
+  namespace: hornet
+  labels:
+    app.kubernetes.io/name: postgresql
+    helm.sh/chart: postgresql-12.5.8
+    app.kubernetes.io/instance: postgres
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    pia-team.com/app: postgres
+    pia-team.com/app-logo: postgres
+    pia-team.com/app-title: Postgres
+    pia-team.com/role: pia.k8s.postgres/0.5.1
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+      app.kubernetes.io/instance: postgres
+  policyTypes:
+  - Egress
+  egress:
+  - ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+  - to:
+    - namespaceSelector: {}
