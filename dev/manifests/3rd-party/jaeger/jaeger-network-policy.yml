@@ -1,0 +1,70 @@
+---
+# Source: xxxxx/templates/jaeger-network-policy.yml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: jaeger-ingress
+  annotations:
+    pia-team.com/role: pia.k8s.jaeger/0.5.0
+spec:
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 10.244.0.0/16
+    ports:
+    - port: 4269
+      protocol: TCP
+    - port: 4317
+      endPort: 4318
+      protocol: TCP
+    - port: 14250
+      endPort: 14271
+      protocol: TCP
+    - port: 16685
+      endPort: 16687
+      protocol: TCP
+    - port: 9092
+      endPort: 9094
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: jaeger
+  policyTypes:
+  - Ingress
+---
+# Source: xxxxx/templates/jaeger-network-policy.yml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: jaeger-egress
+  annotations:
+    pia-team.com/role: pia.k8s.jaeger/0.5.0
+spec:
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 10.244.0.0/16
+    ports:
+    - port: 53
+      protocol: UDP
+    - port: 4269
+      protocol: TCP
+    - port: 4317
+      endPort: 4318
+      protocol: TCP
+    - port: 14250
+      endPort: 14271
+      protocol: TCP
+    - port: 16685
+      endPort: 16687
+      protocol: TCP
+    - port: 9092
+      endPort: 9096
+      protocol: TCP
+    - port: 9200
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: jaeger
+  policyTypes:
+  - Egress

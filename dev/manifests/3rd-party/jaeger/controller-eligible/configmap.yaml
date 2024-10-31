@@ -1,0 +1,40 @@
+---
+# Source: jaeger/charts/kafka/templates/controller-eligible/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jaeger-kafka-controller-configuration
+  namespace: "hornet"
+  labels:
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/version: 3.6.1
+    helm.sh/chart: kafka-26.6.2
+    app.kubernetes.io/component: controller-eligible
+    app.kubernetes.io/part-of: kafka
+  annotations:
+    pia-team.com/role: pia.k8s.jaeger/0.5.0
+data:
+  server.properties: |-
+    # Listeners configuration
+    listeners=CLIENT://:9092,INTERNAL://:9094,CONTROLLER://:9093
+    advertised.listeners=CLIENT://advertised-address-placeholder:9092,INTERNAL://advertised-address-placeholder:9094
+    listener.security.protocol.map=CLIENT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+    # KRaft process roles
+    process.roles=controller,broker
+    #node.id=
+    controller.listener.names=CONTROLLER
+    controller.quorum.voters=0@jaeger-kafka-controller-0.jaeger-kafka-controller-headless.hornet.svc.cluster.local:9093,1@jaeger-kafka-controller-1.jaeger-kafka-controller-headless.hornet.svc.cluster.local:9093,2@jaeger-kafka-controller-2.jaeger-kafka-controller-headless.hornet.svc.cluster.local:9093
+    # Kafka data logs directory
+    log.dir=/bitnami/kafka/data
+    # Kafka application logs directory
+    logs.dir=/opt/bitnami/kafka/logs
+
+    # Interbroker configuration
+    inter.broker.listener.name=INTERNAL
+    default.replication.factor=1
+    log.retention.hours=48
+    message.max.bytes=1048588
+
+    auto.create.topics.enable=true

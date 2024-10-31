@@ -1,0 +1,54 @@
+---
+# Source: jaeger/templates/es-index-cleaner-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: jaeger-es-index-cleaner
+  labels:
+    helm.sh/chart: jaeger-1.0.2
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/version: "1.53.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: es-index-cleaner
+  annotations:
+    pia-team.com/role: pia.k8s.jaeger/0.5.0
+spec:
+  concurrencyPolicy: Forbid
+  schedule: "55 23 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  suspend: false
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: jaeger
+            app.kubernetes.io/instance: jaeger
+            app.kubernetes.io/component: es-index-cleaner
+        spec:
+          serviceAccountName: jaeger-es-index-cleaner
+          imagePullSecrets:
+          - name: reg-creds
+          securityContext:
+            runAsUser: 1000
+          containers:
+          - name: jaeger-es-index-cleaner
+            securityContext:
+              runAsUser: 1000
+            image: 
+              europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/library/jaeger-es-index-cleaner:1.54
+            imagePullPolicy: IfNotPresent
+            args:
+            - "7"
+            - http://elasticsearch-master:9200
+
+
+            env:
+            - name: ES_SERVER_URLS
+              value: http://elasticsearch-master:9200
+            resources: {}
+            volumeMounts:
+          restartPolicy: OnFailure
+          volumes:

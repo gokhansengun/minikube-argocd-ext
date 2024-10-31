@@ -1,0 +1,10 @@
+---
+# Source: jaeger/templates/dnext-jaeger-config.yml
+apiVersion: v1
+data:
+  role: pia.k8s.jaeger/0.5.0
+kind: ConfigMap
+metadata:
+  name: dnext-jaeger-config
+  annotations:
+    pia-team.com/role: pia.k8s.jaeger/0.5.0

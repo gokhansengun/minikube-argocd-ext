@@ -1,0 +1,39 @@
+---
+# Source: jaeger/charts/kafka/templates/controller-eligible/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-kafka-controller-headless
+  namespace: "hornet"
+  labels:
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/version: 3.6.1
+    helm.sh/chart: kafka-26.6.2
+    app.kubernetes.io/component: controller-eligible
+    app.kubernetes.io/part-of: kafka
+  annotations:
+    pia-team.com/role: pia.k8s.jaeger/0.5.0
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - name: tcp-interbroker
+    port: 9094
+    protocol: TCP
+    targetPort: interbroker
+  - name: tcp-client
+    port: 9092
+    protocol: TCP
+    targetPort: client
+  - name: tcp-controller
+    protocol: TCP
+    port: 9093
+    targetPort: controller
+  selector:
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: controller-eligible
+    app.kubernetes.io/part-of: kafka

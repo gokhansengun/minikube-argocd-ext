@@ -1,0 +1,16 @@
+---
+# Source: jaeger/templates/es-index-cleaner-sa.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jaeger-es-index-cleaner
+  labels:
+    helm.sh/chart: jaeger-1.0.2
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/version: "1.53.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: es-index-cleaner
+  annotations:
+    pia-team.com/role: pia.k8s.jaeger/0.5.0
+automountServiceAccountToken: false

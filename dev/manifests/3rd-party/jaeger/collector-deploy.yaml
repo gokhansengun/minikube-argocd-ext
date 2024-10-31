@@ -1,0 +1,84 @@
+---
+# Source: jaeger/templates/collector-deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger-collector
+  labels:
+    helm.sh/chart: jaeger-1.0.2
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/version: "1.53.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: collector
+  annotations:
+    pia-team.com/role: pia.k8s.jaeger/0.5.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/instance: jaeger
+      app.kubernetes.io/component: collector
+  template:
+    metadata:
+      annotations:
+        checksum/config-env: 75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070
+      labels:
+        app.kubernetes.io/name: jaeger
+        app.kubernetes.io/instance: jaeger
+        app.kubernetes.io/component: collector
+    spec:
+      securityContext: {}
+      serviceAccountName: jaeger-collector
+      imagePullSecrets:
+      - name: reg-creds
+      containers:
+      - name: jaeger-collector
+        securityContext: {}
+        image: 
+          europe-docker.pkg.dev/dnext-io/ghcr-dnext-technology/dnext-technology/3rd-party/library/jaeger-collector:1.54
+        imagePullPolicy: IfNotPresent
+        args:
+        env:
+        - name: COLLECTOR_OTLP_ENABLED
+          value: "true"
+        - name: SPAN_STORAGE_TYPE
+          value: kafka
+        - name: KAFKA_PRODUCER_BROKERS
+          value: jaeger-kafka:9092
+        - name: KAFKA_PRODUCER_TOPIC
+          value: jaeger_v1
+        - name: KAFKA_PRODUCER_AUTHENTICATION
+          value: none
+
+        ports:
+        - containerPort: 14250
+          name: grpc
+          protocol: TCP
+        - containerPort: 14268
+          name: http
+          protocol: TCP
+        - containerPort: 14269
+          name: admin
+          protocol: TCP
+        - containerPort: 4317
+          name: otlp-grpc
+          protocol: TCP
+        - containerPort: 4318
+          name: otlp-http
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: admin
+        livenessProbe:
+          httpGet:
+            path: /
+            port: admin
+        resources: {}
+        volumeMounts:
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+  progressDeadlineSeconds: 3600
